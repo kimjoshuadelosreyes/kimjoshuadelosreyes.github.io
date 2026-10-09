@@ -46,8 +46,10 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     const lenis = new Lenis({
       duration: 1.1,
       smoothWheel: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 1.6,
+      /* A little under 1:1. The held sequences are read by scrolling, and at
+         full wheel speed one flick carried the page straight through them. */
+      wheelMultiplier: 0.8,
+      touchMultiplier: 1.3,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
 

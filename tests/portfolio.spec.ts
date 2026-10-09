@@ -721,8 +721,8 @@ test.describe("page boots", () => {
       const j = document.querySelector(".shape") as HTMLElement;
       return (j.getBoundingClientRect().height - window.innerHeight) / window.innerHeight;
     });
-    expect(geo, "four arrangements on one pin").toBeGreaterThan(0.9);
-    expect(geo).toBeLessThan(1.1);
+    expect(geo, "four arrangements on one pin").toBeGreaterThan(1.4);
+    expect(geo).toBeLessThan(1.6);
 
     /* Arrangement k is set from k * 2s. The frames are asked for directly and
        out of order, which is the contract every held section is built to. */
@@ -1004,8 +1004,8 @@ test.describe("scroll-driven motion", () => {
     void deg;
 
     const first = await range();
-    expect(first.hold / first.vh).toBeGreaterThan(1.05);
-    expect(first.hold / first.vh).toBeLessThan(1.25);
+    expect(first.hold / first.vh).toBeGreaterThan(1.7);
+    expect(first.hold / first.vh).toBeLessThan(1.9);
 
     /* Notch k is set from k * 1.6s of a 9.4s take, and the turn to the next
        starts 0.75s before it, so these land in the holds. */
@@ -1102,7 +1102,9 @@ test.describe("scroll-driven motion", () => {
     ];
     await expect(page.locator('[data-od-id="pin-skip"]')).toHaveCount(pins.length);
 
-    // The whole page's held scroll: about five and a half screens, down from eight.
+    /* Long enough that a flick of the wheel cannot carry the page through a
+       sequence unread — which is what happened when these were cut by a third
+       — and bounded so the page does not creep longer unnoticed. */
     const held = await page.evaluate(
       (sels) =>
         sels.reduce((sum, s) => {
@@ -1111,7 +1113,8 @@ test.describe("scroll-driven motion", () => {
         }, 0),
       pins.map((p) => p.runway),
     );
-    expect(held, "total pinned scroll, in screens").toBeLessThan(6);
+    expect(held, "total pinned scroll, in screens").toBeGreaterThan(8);
+    expect(held, "total pinned scroll, in screens").toBeLessThan(9);
 
     for (const pin of pins) {
       const top = await page.evaluate(
@@ -1240,9 +1243,9 @@ test.describe("scroll-driven motion", () => {
       });
 
     const first = await range();
-    // Five beats on one pin: a screen and a half.
-    expect(first.hold / first.vh).toBeGreaterThan(1.4);
-    expect(first.hold / first.vh).toBeLessThan(1.6);
+    // Five beats on one pin: about half a screen each.
+    expect(first.hold / first.vh).toBeGreaterThan(2.3);
+    expect(first.hold / first.vh).toBeLessThan(2.5);
 
     /* Mid-hold of each plate. A plate is in focus from k * 2.4s of an 11.8s
        take and the cut to the next starts 0.8s before it, so these land in the
@@ -1348,8 +1351,8 @@ test.describe("scroll-driven motion", () => {
     const geo = await range();
     // One pinned beat: the frame holds for a little over one screen.
     const vh = await page.evaluate(() => window.innerHeight);
-    expect(geo.hold / vh).toBeGreaterThan(0.8);
-    expect(geo.hold / vh).toBeLessThan(1.0);
+    expect(geo.hold / vh).toBeGreaterThan(1.3);
+    expect(geo.hold / vh).toBeLessThan(1.5);
 
     const read = () =>
       page.evaluate(() => {
@@ -1436,9 +1439,9 @@ test.describe("scroll-driven motion", () => {
       vh: window.innerHeight,
     }));
 
-    // 205svh runway with a 100svh sticky panel: the stage holds for 105svh.
-    expect(heroH / vh).toBeGreaterThanOrEqual(2.0);
-    expect(heroH / vh).toBeLessThanOrEqual(2.1);
+    // 240svh runway with a 100svh sticky panel: the stage holds for 140svh.
+    expect(heroH / vh).toBeGreaterThanOrEqual(2.35);
+    expect(heroH / vh).toBeLessThanOrEqual(2.45);
 
     const read = () =>
       page.evaluate(() => {
@@ -1468,7 +1471,7 @@ test.describe("scroll-driven motion", () => {
 
     // A fifth of the way down the pin: the copy has left, the dive has begun,
     // and the figure is still in the frame.
-    await wheelToY(page, vh * 1.05 * 0.2);
+    await wheelToY(page, vh * 1.4 * 0.2);
     s = await read();
     expect(s.stickyTop, "still pinned at 20%").toBe(0);
     expect(s.copy, "the copy should have left by 20%").toBeLessThan(0.05);
@@ -1476,7 +1479,7 @@ test.describe("scroll-driven motion", () => {
     expect(s.figure, "the figure should still be in frame at 20%").toBe("visible");
 
     // Four fifths: the camera is through the notch and the figure is gone.
-    await wheelToY(page, vh * 1.05 * 0.8);
+    await wheelToY(page, vh * 1.4 * 0.8);
     s = await read();
     expect(s.stickyTop, "still pinned at 80%").toBe(0);
     expect(s.figure, "the figure should have sunk away by 80%").toBe("hidden");
@@ -1592,7 +1595,7 @@ test.describe("scroll-driven motion", () => {
     expect(s.land, "the landing is pinned under the stage").toEqual(s.stage);
 
     // Late in the pin the camera is through and the landing has resolved.
-    await wheelToYExact(page, vh * 1.05 * 0.93);
+    await wheelToYExact(page, vh * 1.4 * 0.93);
     s = await read();
     expect(s.stage.top, "still pinned at 93%").toBe(0);
     expect(s.landing, "the landing should be up by 93%").toBe("visible");
@@ -1609,7 +1612,7 @@ test.describe("scroll-driven motion", () => {
 
     // Past the release the landing leaves as ordinary page, with the next
     // section butted against it — nothing rises over anything.
-    await wheelToY(page, vh * 1.05 + vh * 0.35);
+    await wheelToY(page, vh * 1.4 + vh * 0.35);
     s = await read();
     expect(s.land.top, "the landing should be scrolling away").toBeLessThan(0);
     expect(s.land, "the stage leaves with it").toEqual(s.stage);
