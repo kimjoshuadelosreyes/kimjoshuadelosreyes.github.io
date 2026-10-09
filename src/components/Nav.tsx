@@ -132,7 +132,7 @@ export default function Nav() {
       {open && (
         <div
           data-testid="mobile-menu"
-          className="absolute inset-x-0 top-[76px] border-b border-hairline bg-canvas px-[clamp(20px,1.39vw,30px)] pb-[26px] pt-[10px] lg:hidden"
+          className="absolute inset-x-0 top-[76px] border-b border-hairline bg-canvas px-[var(--gutter)] pb-[26px] pt-[10px] lg:hidden"
         >
           {NAV_LINKS.map((l) => (
             <a
