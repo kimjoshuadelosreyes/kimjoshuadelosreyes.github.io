@@ -90,7 +90,7 @@ test.describe("QAQC: High-Volume Projects & Category Filtering (Home /#work)", (
     await expect(workSection.locator(".work-index__item")).toHaveCount(9);
 
     // Verify "Explore Full Project Archive" button links to /archive
-    const archiveLink = workSection.locator("a[href='/archive']");
+    const archiveLink = workSection.locator("a[href='/archive/']");
     await expect(archiveLink).toBeVisible();
     await expect(archiveLink).toHaveText(/Explore Full Project Archive/i);
 
@@ -228,7 +228,7 @@ test.describe("QAQC: Full Project Archive Page (/archive)", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Ray AI has a case study link
-    const rayCaseStudyLink = page.locator("a[href='/work/rayai']").first();
+    const rayCaseStudyLink = page.locator("a[href='/work/rayai/']").first();
     await expect(rayCaseStudyLink).toBeVisible();
 
     // External links have rel="noopener noreferrer" and target="_blank"

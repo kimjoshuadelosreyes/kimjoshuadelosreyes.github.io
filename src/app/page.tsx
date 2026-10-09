@@ -9,10 +9,13 @@ import Testimonials from "@/components/Testimonials";
 import Faq from "@/components/Faq";
 import Cta from "@/components/Cta";
 import SiteFooter from "@/components/SiteFooter";
+import JsonLd from "@/components/JsonLd";
+import { homeLd } from "@/lib/site";
 
 export default function Page() {
   return (
     <>
+      <JsonLd data={homeLd} />
       <Density />
       <Nav />
       <main>

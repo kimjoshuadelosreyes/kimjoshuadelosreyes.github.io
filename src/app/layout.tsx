@@ -1,12 +1,41 @@
 import type { Metadata, Viewport } from "next";
+import { preload } from "react-dom";
 import "./globals.css";
 import { WordmarkSprite } from "@/components/Wordmark";
 import SmoothScroll from "@/components/SmoothScroll";
+import { SITE, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Kim Joshua \u2014 KIM\u00ae \u00b7 Websites & AI Automation",
-  description:
-    "Kim Joshua designs and builds fast websites, then wires the AI agents and automations that keep the business behind them moving.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE.title, template: `%s | ${SITE.name}` },
+  description: SITE.description,
+  applicationName: `${SITE.name} — ${SITE.brand}`,
+  authors: [{ name: SITE.name, url: SITE_URL }],
+  creator: SITE.name,
+  publisher: SITE.name,
+  category: "technology",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: `${SITE.name} — ${SITE.brand}`,
+    title: SITE.title,
+    description: SITE.description,
+    locale: SITE.locale,
+    // The image itself comes from app/opengraph-image.png and its .alt.txt.
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE.title,
+    description: SITE.description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
+  // Phone numbers and addresses in the copy are not links; stop iOS guessing.
+  formatDetection: { telephone: false, address: false, email: false },
 };
 
 export const viewport: Viewport = {
@@ -16,6 +45,11 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  /* The two faces the hero is set in. Preloaded so the headline does not wait
+     for the stylesheet to be parsed before its font is even requested. */
+  preload("/fonts/tr3a-medium.woff2", { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
+  preload("/fonts/ppneue-book.woff2", { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
+
   return (
     <html lang="en">
       {/* `suppressHydrationWarning` is here for browser extensions, not for us.

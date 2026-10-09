@@ -145,6 +145,102 @@ test.describe("page boots", () => {
     ).toEqual([]);
   });
 
+  test("search engines and link previews are told what the site is", async ({ page, request }) => {
+    await page.goto("/", { waitUntil: "load", timeout: 120_000 });
+
+    const head = await page.evaluate(() => {
+      const meta = (sel: string) => document.querySelector(sel)?.getAttribute("content") ?? null;
+      const link = (rel: string) => document.querySelector(`link[rel="${rel}"]`)?.getAttribute("href") ?? null;
+      return {
+        title: document.title,
+        description: meta('meta[name="description"]'),
+        canonical: link("canonical"),
+        robots: meta('meta[name="robots"]'),
+        ogTitle: meta('meta[property="og:title"]'),
+        ogType: meta('meta[property="og:type"]'),
+        ogUrl: meta('meta[property="og:url"]'),
+        ogImage: meta('meta[property="og:image"]'),
+        ogAlt: meta('meta[property="og:image:alt"]'),
+        ogW: meta('meta[property="og:image:width"]'),
+        ogH: meta('meta[property="og:image:height"]'),
+        twitter: meta('meta[name="twitter:card"]'),
+        twitterImage: meta('meta[name="twitter:image"]'),
+        icons: [...document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]')].map((l) => l.getAttribute("href")),
+        manifest: link("manifest"),
+        lang: document.documentElement.lang,
+        h1: document.querySelectorAll("h1").length,
+        noAlt: [...document.querySelectorAll("img")].filter((i) => !i.hasAttribute("alt")).length,
+        ld: [...document.querySelectorAll('script[type="application/ld+json"]')].map((s) => s.textContent ?? ""),
+      };
+    });
+
+    // What a search result shows: a title that fits, a description that fits.
+    expect(head.title).toBe("Kim Joshua | Websites & AI Automation Developer");
+    expect(head.title.length).toBeLessThanOrEqual(60);
+    expect(head.description!.length).toBeGreaterThanOrEqual(120);
+    expect(head.description!.length).toBeLessThanOrEqual(160);
+    expect(head.description).not.toMatch(/webflow|nenad/i);
+    expect(head.robots).toContain("index");
+    expect(head.lang).toBe("en");
+    expect(head.h1, "exactly one h1").toBe(1);
+    expect(head.noAlt, "images with no alt attribute").toBe(0);
+
+    // One canonical address, absolute, and the share tags agree with it.
+    expect(head.canonical).toMatch(/^https:\/\/[^/]+\/$/);
+    expect(head.ogUrl).toBe(head.canonical);
+    expect(head.ogType).toBe("website");
+    expect(head.ogTitle).toBe(head.title);
+    expect(head.twitter).toBe("summary_large_image");
+
+    // The share image is the size the networks ask for, and has alt text.
+    // (The dev server reports image URLs on its own origin; the build uses the site's.)
+    expect(head.ogImage).toMatch(/^https?:\/\/.+\/opengraph-image\.png/);
+    expect(head.twitterImage).toMatch(/opengraph-image\.png|twitter-image/);
+    expect([head.ogW, head.ogH]).toEqual(["1200", "630"]);
+    expect(head.ogAlt!.trim().length).toBeGreaterThan(20);
+
+    // Every file the head points at is really served.
+    const local = (u: string) => new URL(u, "http://x").pathname;
+    for (const u of [...head.icons, head.manifest, head.ogImage].filter(Boolean) as string[]) {
+      const res = await request.get(local(u));
+      expect(res.status(), `${local(u)} is not served`).toBe(200);
+    }
+    expect(head.icons.some((h) => h?.includes("favicon.ico"))).toBe(true);
+    expect(head.icons.some((h) => h?.includes("apple-icon"))).toBe(true);
+    expect(head.icons.some((h) => h?.includes("icon.svg"))).toBe(true);
+
+    // Structured data parses, and says who this is and what the FAQ answers.
+    expect(head.ld.length).toBeGreaterThanOrEqual(1);
+    const graph = (JSON.parse(head.ld[0]) as { "@graph": Array<Record<string, unknown>> })["@graph"];
+    const byType = (t: string) => graph.find((g) => g["@type"] === t)!;
+    expect(graph.map((g) => g["@type"]).sort()).toEqual(["FAQPage", "Person", "ProfilePage", "WebSite"]);
+    expect(byType("Person").name).toBe("Kim Joshua");
+    expect(byType("Person").sameAs).toContain("https://www.linkedin.com/in/kimjoshuadev/");
+    const faq = byType("FAQPage").mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;
+    expect(faq.length).toBe(8);
+    // The structured answers are the ones on the page, not a second copy.
+    await expect(page.locator(".ask-q").first()).toContainText(faq[0].name);
+
+    // robots.txt allows crawling and points at a sitemap that lists the pages.
+    const robots = await (await request.get("/robots.txt")).text();
+    expect(robots).toMatch(/User-Agent: \*/i);
+    expect(robots).toMatch(/Allow: \//);
+    expect(robots).not.toMatch(/Disallow: \/\s*$/m);
+    expect(robots).toMatch(/Sitemap: https:\/\/.+\/sitemap\.xml/);
+    const sitemap = await (await request.get("/sitemap.xml")).text();
+    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    expect(locs[0]).toBe(head.canonical);
+    expect(locs.some((l) => l.endsWith("/archive/"))).toBe(true);
+    expect(locs.filter((l) => l.includes("/work/")).length).toBe(9);
+    expect(new Set(locs).size, "duplicate sitemap entries").toBe(locs.length);
+
+    // A case study has its own title and its own canonical.
+    await page.goto("/work/puck/", { waitUntil: "load" });
+    expect(await page.title()).toBe("Puck — AI & SaaS | Kim Joshua");
+    expect(await page.locator('link[rel="canonical"]').getAttribute("href")).toMatch(/\/work\/puck\/$/);
+    expect(await page.locator("h1").count()).toBe(1);
+  });
+
   test("GSAP mounts: SplitText splits, Lenis binds, and the held sections register", async ({ page, isMobile }) => {
     await page.goto("/", { waitUntil: "load", timeout: 120_000 });
 
@@ -493,15 +589,15 @@ test.describe("page boots", () => {
       .evaluateAll((els) => els.map((el) => (el as HTMLAnchorElement).getAttribute("href")));
 
     expect(rows).toEqual([
-      "/work/1910",
-      "/work/semiconbio",
-      "/work/happyring",
-      "/work/omicron",
-      "/work/puck",
-      "/work/alosant",
-      "/work/lilipad",
-      "/work/pssltd",
-      "/work/rayai",
+      "/work/1910/",
+      "/work/semiconbio/",
+      "/work/happyring/",
+      "/work/omicron/",
+      "/work/puck/",
+      "/work/alosant/",
+      "/work/lilipad/",
+      "/work/pssltd/",
+      "/work/rayai/",
     ]);
     // One destination each — nothing in the list points at a page that
     // `generateStaticParams` does not build.
