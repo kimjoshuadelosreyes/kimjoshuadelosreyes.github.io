@@ -161,9 +161,9 @@
   /* Hero scroll runway, and the landing that shares it.
 
      Live (the pre-paint gate sets `data-live`, so: JS on, motion allowed), from
-     lg up: a 205svh section holding TWO 100svh sticky panels on top of each
+     lg up: a 240svh section holding TWO 100svh sticky panels on top of each
      other — the stage, and behind it the landing, pulled up under the stage by
-     its own height. Both pin for 105svh and release together, so the dive
+     its own height. Both pin for 140svh and release together, so the dive
      through the wordmark arrives in the landing and the landing then scrolls
      away as ordinary page. Nothing rises over anything; there is no seam.
 
@@ -173,7 +173,7 @@
   .hero-copy { pointer-events: auto; }
   .hero-landing { position: relative; z-index: 0; }
   @media (min-width: 1024px) {
-    .hero[data-live] { min-height: 205svh; }
+    .hero[data-live] { min-height: 240svh; }
     .hero[data-live] .hero-landing {
       position: sticky;
       top: 0;
@@ -417,15 +417,15 @@
   .pact-sign path { fill: none; stroke: var(--color-ink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; }
 
   /* Ways to work — the shape of the engagement.
-     A 200svh runway with a 100svh sticky stage: four arrangements across a
-     100svh hold. Words on the left, one calendar on the right whose twelve
+     A 250svh runway with a 100svh sticky stage: four arrangements across a
+     150svh hold. Words on the left, one calendar on the right whose twelve
      marks are morphed by the timeline. Below lg and under reduced motion the
      component renders a card per arrangement and there is no runway. */
   /* `clip`, not `hidden`: it must not become a scroll container, or the stage
      inside it stops being sticky. It is here for the instant before the
      stacked branch takes over on a phone, when the pinned markup is still in
      the page and a flag's label would otherwise push the document wide. */
-  .shape { min-height: 200svh; overflow-x: clip; }
+  .shape { min-height: 250svh; overflow-x: clip; }
   .shape-stage {
     position: sticky;
     top: 0;
@@ -554,11 +554,11 @@
   }
 
   /* The dial — "what you get".
-     A 215svh runway with a 100svh sticky stage: six notches across a 115svh
+     A 280svh runway with a 100svh sticky stage: six notches across a 180svh
      hold. Reading column on the left, the dial on the right, sized off `--ds`
      (its diameter) so it scales as one object. Below lg and under reduced
      motion the component renders six cards instead and there is no runway. */
-  .dial { min-height: 215svh; }
+  .dial { min-height: 280svh; }
   .dial-stage {
     position: sticky;
     top: 0;
@@ -688,13 +688,13 @@
   .dial-card-title { margin: 18px 0 10px; font-family: var(--font-display); font-size: clamp(24px, 6.4vw, 32px); font-weight: 500; line-height: 1.05; letter-spacing: -0.02em; }
 
   /* The reel — the work band's pinned take.
-     A 250svh runway with a 100svh sticky stage: five beats (four plates, then
-     the stack wall) across a 150svh hold. Captions on the left, plates stacked
+     A 340svh runway with a 100svh sticky stage: five beats (four plates, then
+     the stack wall) across a 240svh hold. Captions on the left, plates stacked
      in one cell on the right with room either side for their tool chips. Each
      plate is a screen drawn in markup and sized in `em` off `--pw`, its own
      width, so it scales as one object. Below lg and under reduced motion the
      component renders the rail instead and there is no runway. */
-  .reel { min-height: 250svh; }
+  .reel { min-height: 340svh; }
   .reel-stage {
     position: sticky;
     top: 0;
@@ -1045,14 +1045,14 @@
   .reel-finale .reel-wall { width: auto; margin-top: 24px; }
 
   /* System flow — one pinned frame.
-     A 190svh runway with a 100svh sticky stage, so the frame holds for 90svh
+     A 240svh runway with a 100svh sticky stage, so the frame holds for 140svh
      while the camera travels its four stations. Below lg and under reduced
      motion the component renders the stacked branch and there is no runway.
 
      Everything inside a station is sized in `em` off `--sw`, the station's
      width, so the whole picture scales as one object: it shrinks on a short
      laptop rather than colliding with the caption beneath it. */
-  .sys { min-height: 190svh; }
+  .sys { min-height: 240svh; }
   .sys-stage {
     position: sticky;
     top: 0;
