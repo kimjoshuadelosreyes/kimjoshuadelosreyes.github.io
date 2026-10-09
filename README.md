@@ -1276,3 +1276,16 @@ The plate is capped at its own pixel width. Three of the nine sources are small 
 them up to a shared size would only make them soft — a test asserts no plate is ever rendered wider
 than its own resolution.
 
+## Deploying (GitHub Pages)
+
+The site is a static export. `npm run build` writes it to `out/`, and
+`.github/workflows/deploy.yml` builds and publishes that folder to GitHub Pages
+on every push to `main`.
+
+- The address the build writes into canonical links, the sitemap and share
+  images is `SITE_URL` in `src/lib/site.ts`. Override it without a code change
+  by setting the repository variable `SITE_URL`.
+- `npm run brand-assets` regenerates the share image, the app icon and the
+  favicon from the wordmark, the portrait and the brand fonts.
+- `npm start` serves the last export locally.
+

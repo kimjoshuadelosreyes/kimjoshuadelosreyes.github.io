@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbLd } from "@/lib/site";
 import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 import WorkflowDiagram from "@/components/WorkflowDiagram";
@@ -21,6 +23,9 @@ export function generateStaticParams() {
   return WORK_SEQUENCE.map((p) => ({ id: p.id }));
 }
 
+// A static export can only serve the pages it was built with.
+export const dynamicParams = false;
+
 export async function generateMetadata({
   params,
 }: {
@@ -29,9 +34,12 @@ export async function generateMetadata({
   const { id } = await params;
   const project = findProject(id);
   if (!project) return {};
+  const path = `/work/${project.id}/`;
   return {
-    title: `${project.name} — KIM® · Kim Joshua`,
+    title: `${project.name} — ${project.tag}`,
     description: project.copy,
+    alternates: { canonical: path },
+    openGraph: { type: "article", title: `${project.name} — ${project.tag}`, description: project.copy, url: path },
   };
 }
 
@@ -47,6 +55,13 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ id: 
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Work", path: "/#work" },
+          { name: project.name, path: `/work/${project.id}/` },
+        ])}
+      />
       <Nav />
       <main className="pt-[76px]">
         <article data-od-id={`case-${project.id}`}>
