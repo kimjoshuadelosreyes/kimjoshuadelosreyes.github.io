@@ -106,7 +106,14 @@ export default function Nav() {
             aria-label="Menu"
             className="flex h-[46px] w-[46px] items-center justify-center rounded-full border border-hairline lg:hidden"
           >
-            <span className="relative block h-[1.5px] w-[17px] bg-ink">
+            {/* This span IS the middle bar; the other two hang off it. Open, the
+                outer pair cross into an X, so the middle one has to go — left
+                in, it drew a line straight through the X. */}
+            <span
+              className={`relative block h-[1.5px] w-[17px] transition-colors duration-200 ${
+                open ? "bg-transparent" : "bg-ink"
+              }`}
+            >
               <span
                 className={`absolute left-0 h-[1.5px] w-[17px] bg-ink transition-transform duration-300 ${
                   open ? "translate-y-0 rotate-45" : "-translate-y-[5px]"

@@ -1834,6 +1834,19 @@ test.describe("interaction", () => {
 
     const panel = page.getByTestId("mobile-menu");
     await expect(panel).toBeVisible();
+
+    /* Open, the button is a clean X: the middle bar is gone and the other two
+       cross at its centre. Left visible, it struck a line through the X. */
+    await expect
+      .poll(() =>
+        burger.evaluate((btn) => {
+          const mid = btn.querySelector("span") as HTMLElement;
+          // Tailwind sets the individual `rotate` property, not `transform`.
+          const angle = (el: Element) => parseFloat(getComputedStyle(el).rotate) || 0;
+          return [getComputedStyle(mid).backgroundColor, ...[...mid.children].map(angle).sort((x, y) => x - y)].join(" ");
+        }),
+      )
+      .toBe("rgba(0, 0, 0, 0) -45 45");
     await expect(panel.getByRole("link", { name: "Services", exact: true })).toBeVisible();
 
     await page.screenshot({ path: "test-results/shots/09-mobile-menu.png" });
