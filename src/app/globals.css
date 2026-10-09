@@ -110,12 +110,20 @@
 /* ------------------------------------------------------------------ *
  * Components — the fluid, cinematic pieces that utilities can't express
  * ------------------------------------------------------------------ */
+/* The page gutter: how far anything sits from the edge of the screen. One
+   value, used by the shell, the nav, and every stage that positions its own
+   captions, so they all line up. It was 20-30px, which on a laptop put type
+   hard against the edge of the window. */
+:root {
+  --gutter: clamp(20px, 3.6vw, 72px);
+}
+
 @layer components {
   .shell {
     width: 100%;
     max-width: 1680px;
     margin-inline: auto;
-    padding-inline: clamp(20px, 1.39vw, 30px);
+    padding-inline: var(--gutter);
   }
 
   /* Editorial left rail — the NESH posture: label left, content indented right. */
@@ -202,7 +210,7 @@
      corner. Only the pinned branches render it. */
   .pin-skip {
     position: absolute;
-    right: clamp(20px, 1.39vw, 30px);
+    right: var(--gutter);
     bottom: clamp(18px, 3svh, 30px);
     z-index: 40;
     display: inline-flex;
@@ -814,7 +822,7 @@
   /* -- captions, ticks -- */
   .reel-captions {
     position: absolute;
-    left: clamp(20px, 1.39vw, 30px);
+    left: var(--gutter);
     top: 50%;
     z-index: 3;
     width: min(24.5vw, 380px);
@@ -853,7 +861,7 @@
   }
   .reel-ticks {
     position: absolute;
-    left: clamp(20px, 1.39vw, 30px);
+    left: var(--gutter);
     bottom: clamp(24px, 4svh, 44px);
     z-index: 3;
     display: flex;
@@ -1028,7 +1036,7 @@
   .reel-rail {
     display: flex;
     gap: 14px;
-    padding: 0 clamp(20px, 1.39vw, 30px);
+    padding: 0 var(--gutter);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
@@ -1057,7 +1065,7 @@
     position: sticky;
     top: 0;
     height: 100svh;
-    padding: 88px clamp(12px, 1.39vw, 30px) clamp(12px, 1.39vw, 24px);
+    padding: 88px var(--gutter) clamp(12px, 1.39vw, 24px);
   }
   .sys-frame {
     --sw: min(520px, 58svh);
@@ -1885,7 +1893,7 @@
      type as well, and two names over each other read as a third. */
   .work-caption {
     position: absolute;
-    left: clamp(20px, 1.39vw, 30px);
+    left: var(--gutter);
     top: 50%;
     z-index: 300;
     width: min(30vw, 420px);
@@ -1953,7 +1961,7 @@
 
   .work-ticks {
     position: absolute;
-    right: clamp(20px, 1.39vw, 30px);
+    right: var(--gutter);
     bottom: clamp(22px, 3vw, 44px);
     z-index: 300;
     display: flex;
@@ -2293,7 +2301,7 @@
     display: block;
     width: auto;
     height: auto;
-    padding-inline: clamp(20px, 1.39vw, 30px);
+    padding-inline: var(--gutter);
     padding-block: clamp(28px, 6vw, 56px);
     will-change: auto;
   }
