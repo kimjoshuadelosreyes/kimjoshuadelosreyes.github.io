@@ -5,6 +5,8 @@ import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
 import { CAPABILITIES, RAIL_INDEX } from "@/lib/content";
 import Icon from "./Icons";
+import Ask from "./Ask";
+import SkipPin from "./SkipPin";
 
 declare global {
   interface Window {
@@ -59,18 +61,23 @@ const Tick = () => (
   </svg>
 );
 
-function Points({ points }: { points: readonly string[] }) {
+function Points({ points, title }: { points: readonly string[]; title: string }) {
   return (
-    <ul className="dial-points">
-      {points.map((p) => (
-        <li key={p}>
-          <i>
-            <Tick />
-          </i>
-          {p}
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="dial-points">
+        {points.map((p) => (
+          <li key={p}>
+            <i>
+              <Tick />
+            </i>
+            {p}
+          </li>
+        ))}
+      </ul>
+      <p className="dial-ask">
+        <Ask subject={`I need: ${title}`}>Ask about this</Ask>
+      </p>
+    </>
   );
 }
 
@@ -237,7 +244,7 @@ export default function Capabilities() {
               </div>
               <h3 className="dial-card-title">{c.title}</h3>
               <p className="dial-copy">{c.copy}</p>
-              <Points points={c.points} />
+              <Points points={c.points} title={c.title} />
             </article>
           ))}
         </div>
@@ -271,11 +278,13 @@ export default function Capabilities() {
                 {CAPABILITIES.map((c) => (
                   <div key={c.id} className="dial-body" data-od-id={`cap-${c.id}`}>
                     <p className="dial-copy">{c.copy}</p>
-                    <Points points={c.points} />
+                    <Points points={c.points} title={c.title} />
                   </div>
                 ))}
               </div>
             </div>
+
+            <SkipPin runway=".dial" />
 
             <div className="dial-wheel" aria-hidden="true">
               <div className="dial-rim">

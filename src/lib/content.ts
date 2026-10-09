@@ -6,6 +6,9 @@
 
 export const EMAIL = "kimjoshuadr@gmail.com";
 
+/** An email to the owner with the subject already written. */
+export const mailTo = (subject: string) => `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}`;
+
 export const NAV_LINKS = [
   { id: "about", label: "How it works" },
   { id: "work", label: "Projects" },

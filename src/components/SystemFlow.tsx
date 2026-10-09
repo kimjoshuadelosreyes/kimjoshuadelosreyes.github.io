@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
-import { EMAIL, FLOW, RAIL_INDEX } from "@/lib/content";
+import { FLOW, RAIL_INDEX } from "@/lib/content";
+import Ask from "./Ask";
+import SkipPin from "./SkipPin";
 import Icon from "./Icons";
 
 declare global {
@@ -498,6 +500,12 @@ export default function SystemFlow() {
             );
           })}
           <p className="sys-note sys-note--flow">{FLOW.note} · names and details are made up</p>
+          <div className="section-ask">
+            <p>Want this running behind your site?</p>
+            <Ask as="button" subject="I want a flow like this" id="flow-cta">
+              {FLOW.finale.cta}
+            </Ask>
+          </div>
         </div>
       ) : (
         /* Pinned — one frame, one camera */
@@ -535,16 +543,17 @@ export default function SystemFlow() {
                 ))}
               </div>
 
+              <SkipPin runway=".sys" className="pin-skip--onDark" />
+
               <div className="sys-finale">
                 <p className="sys-finale-title">
                   {FLOW.finale.titleLines.map((line) => (
                     <span key={line}>{line} </span>
                   ))}
                 </p>
-                <a href={`mailto:${EMAIL}`} className="btn btn--primary" data-od-id="flow-cta">
+                <Ask as="button" subject="I want a flow like this" id="flow-cta">
                   {FLOW.finale.cta}
-                  <Icon name="arrow" className="arrow-ic" />
-                </a>
+                </Ask>
               </div>
             </div>
           </div>

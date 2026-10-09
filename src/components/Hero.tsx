@@ -6,6 +6,7 @@ import { gsap, ScrollTrigger, SplitText, prefersReducedMotion } from "@/lib/gsap
 import { HERO, HERO_LANDING, HERO_PROOF, EMAIL } from "@/lib/content";
 import Icon from "./Icons";
 import ClientsMarquee from "./ClientsMarquee";
+import SkipPin from "./SkipPin";
 import { Wordmark, WORDMARK_PATHS, WORDMARK_VIEWBOX } from "./Wordmark";
 
 declare global {
@@ -251,7 +252,7 @@ export default function Hero() {
       gsap.set(world, { transformOrigin: `${notchX}px ${notchY}px` });
 
       const split = new SplitText(title, { type: "lines", linesClass: "split-line", mask: "lines" });
-      const rest = q(".hero-lede, .hero-actions, .hero-meta");
+      const rest = q(".hero-lede, .hero-actions, .hero-meta, .hero-skip");
 
       /* The landing. Its cards leave from the notch the camera came through,
          so each one's start is the vector from its seat back to that point. */
@@ -569,6 +570,10 @@ export default function Hero() {
             <span key={c.left} className="hero-plate-cover" style={c} />
           ))}
         </div>
+
+        {/* The way past the hold. Only where there is one, and it leaves with
+            the copy: once the dive is under way there is nothing left to skip. */}
+        <SkipPin runway=".hero" className="hero-skip" />
 
         {/* 4 — the copy. Ink on the fog, sized in `svh` below lg so it can
                never outgrow the figure behind it. */}
