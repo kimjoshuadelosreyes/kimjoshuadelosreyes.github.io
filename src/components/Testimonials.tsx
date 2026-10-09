@@ -5,6 +5,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
 import { HERO, PROMISES, PROOF_FACTS, PROOF_QUOTES } from "@/lib/content";
 import { WORDMARK_PATHS, WORDMARK_VIEWBOX } from "./Wordmark";
+import Ask from "./Ask";
 
 /**
  * Proof — the x-ray, then the working agreement.
@@ -347,6 +348,13 @@ export default function Testimonials() {
             <path d="M117 92C119 78 123 66 129 64C137 62 135 86 135 102C137 82 145 64 153 64C161 64 159 86 159 102C161 82 169 64 177 64C185 64 183 88 187 100C191 108 206 102 238 84" pathLength={1} />
             <path d="M18 116C92 107 184 107 266 114" pathLength={1} />
           </svg>
+        </div>
+
+        <div className="section-ask pact-ask">
+          <p>Those four go in the scope, in writing.</p>
+          <Ask as="button" subject="Hold you to it: a project" id="proof-cta">
+            Hold me to it
+          </Ask>
         </div>
       </div>
     </section>

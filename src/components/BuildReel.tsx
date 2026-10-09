@@ -5,6 +5,8 @@ import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
 import { BUILDS, BUILDS_FINALE, STACK, tintOf } from "@/lib/content";
 import TechIcon from "./TechIcons";
+import Ask from "./Ask";
+import SkipPin from "./SkipPin";
 
 declare global {
   interface Window {
@@ -103,9 +105,11 @@ const CODE: ReadonlyArray<ReadonlyArray<readonly [string, string?]>> = [
 /* Where a plate's tool chips dock, clockwise from top-left. `side` is which
    way the chip's stem points back at the plate. */
 const SEATS = [
-  { side: "l", style: { right: "calc(100% + 2.4em)", top: "14%" } },
+  { side: "l", style: { right: "calc(100% + 2.4em)", top: "2%" } },
   { side: "r", style: { left: "calc(100% + 2.4em)", top: "8%" } },
-  { side: "l", style: { right: "calc(100% + 2.4em)", top: "62%" } },
+  /* Low on the left: the caption sits beside the middle of the plate, and a
+     long chip here would reach into it. */
+  { side: "l", style: { right: "calc(100% + 2.4em)", top: "86%" } },
   { side: "r", style: { left: "calc(100% + 2.4em)", top: "44%" } },
   { side: "r", style: { left: "calc(100% + 2.4em)", top: "78%" } },
 ] as const;
@@ -289,6 +293,13 @@ function Caption({ index }: { index: number }) {
           ))}
         </ul>
       )}
+      <p className="reel-ask">
+        {"stack" in b ? (
+          <Ask subject={`I need: ${b.name}`}>I need one of these</Ask>
+        ) : (
+          <Ask subject="Build something with this stack">Build with this stack</Ask>
+        )}
+      </p>
     </div>
   );
 }
@@ -749,6 +760,8 @@ export default function BuildReel() {
           })}
           <Wall />
         </div>
+
+        <SkipPin runway=".reel" className="pin-skip--onDark" />
 
         <div className="reel-ticks" aria-hidden="true">
           {Array.from({ length: BEATS }, (_, i) => (

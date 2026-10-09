@@ -161,9 +161,9 @@
   /* Hero scroll runway, and the landing that shares it.
 
      Live (the pre-paint gate sets `data-live`, so: JS on, motion allowed), from
-     lg up: a 240svh section holding TWO 100svh sticky panels on top of each
+     lg up: a 205svh section holding TWO 100svh sticky panels on top of each
      other — the stage, and behind it the landing, pulled up under the stage by
-     its own height. Both pin for 140svh and release together, so the dive
+     its own height. Both pin for 105svh and release together, so the dive
      through the wordmark arrives in the landing and the landing then scrolls
      away as ordinary page. Nothing rises over anything; there is no seam.
 
@@ -173,7 +173,7 @@
   .hero-copy { pointer-events: auto; }
   .hero-landing { position: relative; z-index: 0; }
   @media (min-width: 1024px) {
-    .hero[data-live] { min-height: 240svh; }
+    .hero[data-live] { min-height: 205svh; }
     .hero[data-live] .hero-landing {
       position: sticky;
       top: 0;
@@ -197,6 +197,62 @@
     border-radius: var(--radius-base);
     box-shadow: 0 16px 40px color-mix(in oklab, var(--color-ink) 14%, transparent);
   }
+
+  /* The way past a held sequence: a small pill in the stage's bottom-right
+     corner. Only the pinned branches render it. */
+  .pin-skip {
+    position: absolute;
+    right: clamp(20px, 1.39vw, 30px);
+    bottom: clamp(18px, 3svh, 30px);
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid color-mix(in oklab, currentColor 28%, transparent);
+    border-radius: 99px;
+    background: color-mix(in oklab, var(--color-canvas) 86%, transparent);
+    color: var(--color-ink);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: border-color 0.2s var(--ease-nesh), background 0.2s var(--ease-nesh);
+  }
+  .pin-skip:hover { border-color: currentColor; }
+  .pin-skip svg { width: 12px; height: 12px; }
+  .pin-skip--onDark { background: color-mix(in oklab, var(--color-ink) 80%, transparent); color: var(--color-inkfg); }
+  /* The hero's stage is one viewport on every screen, but it only holds from lg. */
+  .hero-skip { display: none; }
+  @media (min-width: 1024px) { .hero[data-live] .hero-skip { display: inline-flex; } }
+
+  /* The in-section way out. A quiet link inside a panel or caption; the
+     section-ending form is a line of copy beside a full button. */
+  .ask-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 4px 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: inherit;
+    transition: color 0.2s var(--ease-nesh), gap 0.2s var(--ease-nesh);
+  }
+  .ask-cta { position: relative; background: linear-gradient(var(--color-electric), var(--color-electric)) 0 calc(100% - 9px) / 100% 2px no-repeat; }
+  .ask-cta:hover { color: var(--color-electric); gap: 12px; }
+  .ask-cta .arrow-ic { width: 12px; height: 12px; }
+  .section-ask { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 28px; padding-top: clamp(20px, 2.6vw, 34px); border-top: 1px solid var(--color-hairline); }
+  .section-ask p { font-family: var(--font-display); font-size: clamp(19px, 1.9vw, 30px); font-weight: 500; letter-spacing: -0.02em; }
+  .reel-ask { margin-top: clamp(10px, 1.6svh, 18px); }
+  .dial-ask { margin-top: clamp(8px, 1.4svh, 16px); }
+  .shape-facts > .shape-ask { grid-template-columns: 1fr; padding-block: clamp(4px, 0.8svh, 10px); border-bottom: 0; }
+  .ask-follow { margin-top: auto; }
+  .ask-own { grid-column: 1 / -1; }
+  @media (min-width: 1024px) { .pact-ask { grid-column: 2; } }
+  .sys--compact .section-ask { margin-top: -8px; }
 
   /* Reveals start a few px to one side of where they land, which on a narrow
      screen is a few px past the edge of the page. `clip`, not `hidden`: it must
@@ -361,15 +417,15 @@
   .pact-sign path { fill: none; stroke: var(--color-ink); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; }
 
   /* Ways to work — the shape of the engagement.
-     A 250svh runway with a 100svh sticky stage: four arrangements across a
-     150svh hold. Words on the left, one calendar on the right whose twelve
+     A 200svh runway with a 100svh sticky stage: four arrangements across a
+     100svh hold. Words on the left, one calendar on the right whose twelve
      marks are morphed by the timeline. Below lg and under reduced motion the
      component renders a card per arrangement and there is no runway. */
   /* `clip`, not `hidden`: it must not become a scroll container, or the stage
      inside it stops being sticky. It is here for the instant before the
      stacked branch takes over on a phone, when the pinned markup is still in
      the page and a flag's label would otherwise push the document wide. */
-  .shape { min-height: 250svh; overflow-x: clip; }
+  .shape { min-height: 200svh; overflow-x: clip; }
   .shape-stage {
     position: sticky;
     top: 0;
@@ -498,11 +554,11 @@
   }
 
   /* The dial — "what you get".
-     A 270svh runway with a 100svh sticky stage: six notches across a 170svh
+     A 215svh runway with a 100svh sticky stage: six notches across a 115svh
      hold. Reading column on the left, the dial on the right, sized off `--ds`
      (its diameter) so it scales as one object. Below lg and under reduced
      motion the component renders six cards instead and there is no runway. */
-  .dial { min-height: 270svh; }
+  .dial { min-height: 215svh; }
   .dial-stage {
     position: sticky;
     top: 0;
@@ -632,13 +688,13 @@
   .dial-card-title { margin: 18px 0 10px; font-family: var(--font-display); font-size: clamp(24px, 6.4vw, 32px); font-weight: 500; line-height: 1.05; letter-spacing: -0.02em; }
 
   /* The reel — the work band's pinned take.
-     A 320svh runway with a 100svh sticky stage: five beats (four plates, then
-     the stack wall) across a 220svh hold. Captions on the left, plates stacked
+     A 250svh runway with a 100svh sticky stage: five beats (four plates, then
+     the stack wall) across a 150svh hold. Captions on the left, plates stacked
      in one cell on the right with room either side for their tool chips. Each
      plate is a screen drawn in markup and sized in `em` off `--pw`, its own
      width, so it scales as one object. Below lg and under reduced motion the
      component renders the rail instead and there is no runway. */
-  .reel { min-height: 320svh; }
+  .reel { min-height: 250svh; }
   .reel-stage {
     position: sticky;
     top: 0;
@@ -761,7 +817,7 @@
     left: clamp(20px, 1.39vw, 30px);
     top: 50%;
     z-index: 3;
-    width: min(27vw, 400px);
+    width: min(24.5vw, 380px);
     display: grid;
     transform: translateY(-50%);
   }
@@ -989,14 +1045,14 @@
   .reel-finale .reel-wall { width: auto; margin-top: 24px; }
 
   /* System flow — one pinned frame.
-     A 230svh runway with a 100svh sticky stage, so the frame holds for 130svh
+     A 190svh runway with a 100svh sticky stage, so the frame holds for 90svh
      while the camera travels its four stations. Below lg and under reduced
      motion the component renders the stacked branch and there is no runway.
 
      Everything inside a station is sized in `em` off `--sw`, the station's
      width, so the whole picture scales as one object: it shrinks on a short
      laptop rather than colliding with the caption beneath it. */
-  .sys { min-height: 230svh; }
+  .sys { min-height: 190svh; }
   .sys-stage {
     position: sticky;
     top: 0;

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
 import { FAQS, RAIL_INDEX } from "@/lib/content";
+import Ask from "./Ask";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -85,6 +86,9 @@ function Thread({ index, armed }: { index: number; armed: boolean }) {
           <i className="ask-caret" />
         </p>
       </div>
+      <p className="ask-follow">
+        <Ask subject={`Following up: ${item.q}`}>Ask me this for real</Ask>
+      </p>
       {/* The answer, whole, for anyone not watching it being typed. */}
       <p className="sr-only" aria-live="polite" data-od-id="ask-answer">
         {item.a}
@@ -196,6 +200,13 @@ export default function Faq() {
             <Thread index={active} armed={armed} />
           </div>
         )}
+
+        <div className="section-ask ask-own">
+          <p>Yours is not on the list?</p>
+          <Ask as="button" subject="A question" id="faq-cta">
+            Ask it directly
+          </Ask>
+        </div>
       </div>
     </section>
   );

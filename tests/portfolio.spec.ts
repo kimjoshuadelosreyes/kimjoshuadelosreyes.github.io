@@ -625,8 +625,8 @@ test.describe("page boots", () => {
       const j = document.querySelector(".shape") as HTMLElement;
       return (j.getBoundingClientRect().height - window.innerHeight) / window.innerHeight;
     });
-    expect(geo, "four arrangements on one pin").toBeGreaterThan(1.3);
-    expect(geo).toBeLessThan(1.7);
+    expect(geo, "four arrangements on one pin").toBeGreaterThan(0.9);
+    expect(geo).toBeLessThan(1.1);
 
     /* Arrangement k is set from k * 2s. The frames are asked for directly and
        out of order, which is the contract every held section is built to. */
@@ -908,8 +908,8 @@ test.describe("scroll-driven motion", () => {
     void deg;
 
     const first = await range();
-    expect(first.hold / first.vh).toBeGreaterThan(1.5);
-    expect(first.hold / first.vh).toBeLessThan(1.9);
+    expect(first.hold / first.vh).toBeGreaterThan(1.05);
+    expect(first.hold / first.vh).toBeLessThan(1.25);
 
     /* Notch k is set from k * 1.6s of a 9.4s take, and the turn to the next
        starts 0.75s before it, so these land in the holds. */
@@ -954,6 +954,94 @@ test.describe("scroll-driven motion", () => {
     expect(Math.abs(mid.sum), "icons stay upright mid-turn").toBeLessThan(0.2);
     expect(set.rim, "two notches round at 3.3s").toBeCloseTo(-120, 0);
     expect(midAgain, "seeking back gives the identical frame").toEqual(mid);
+  });
+
+  test("every section offers a way to get in touch, with the subject written", async ({ page }) => {
+    await page.goto("/", { waitUntil: "load", timeout: 120_000 });
+    await page.waitForTimeout(2000);
+
+    /* A reader convinced half-way down should not have to reach the bottom to
+       act on it. Every section carries at least one link straight to the
+       inbox, and the in-section ones say what the reader was looking at. */
+    for (const id of ["top", "about", "work", "capabilities", "engagement", "testimonials", "faq"]) {
+      const links = page.locator(`#${id} a[href^="mailto:kimjoshuadr@gmail.com"]`);
+      expect(await links.count(), `#${id} has no way to get in touch`).toBeGreaterThanOrEqual(1);
+    }
+    await expect(page.locator(".cta a[href^='mailto:kimjoshuadr@gmail.com']")).not.toHaveCount(0);
+
+    const asks = await page.locator("[data-ask]").evaluateAll((els) =>
+      els.map((el) => ({ href: decodeURIComponent(el.getAttribute("href") ?? ""), text: (el.textContent ?? "").trim() })),
+    );
+    // 1 flow + 5 reel + 6 dial + 4 ways to work + 1 proof + 2 FAQ.
+    expect(asks.length).toBe(19);
+    for (const a of asks) {
+      expect(a.href, `"${a.text}" has no subject`).toMatch(/^mailto:kimjoshuadr@gmail\.com\?subject=.{4,}/);
+      expect(a.text.length, "an ask has no label").toBeGreaterThan(3);
+    }
+    // The subject names the thing: a build, a capability, an arrangement, a question.
+    const subjects = asks.map((a) => a.href.split("subject=")[1]);
+    for (const expected of [
+      "I need: Automation pipeline",
+      "I need: AI Agents",
+      "Brief: Ongoing consultancy",
+      "Following up: Do you use Webflow or other page builders?",
+    ]) {
+      expect(subjects, `no ask with the subject "${expected}"`).toContain(expected);
+    }
+  });
+
+  test("every held sequence can be skipped, and lands on what comes next", async ({ page }, testInfo) => {
+    testInfo.setTimeout(300_000);
+    await page.goto("/", { waitUntil: "load", timeout: 120_000 });
+    await page.waitForTimeout(4800);
+
+    /* Five pins, five ways past them. Pressing one carries the page to the end
+       of that runway — the pin has let go and the next thing is under the nav. */
+    const pins = [
+      { runway: ".hero", next: "#about" },
+      { runway: ".sys", next: "#work" },
+      { runway: ".reel", next: ".work-index" },
+      { runway: ".dial", next: "#engagement" },
+      { runway: ".shape", next: ".brief" },
+    ];
+    await expect(page.locator('[data-od-id="pin-skip"]')).toHaveCount(pins.length);
+
+    // The whole page's held scroll: about five and a half screens, down from eight.
+    const held = await page.evaluate(
+      (sels) =>
+        sels.reduce((sum, s) => {
+          const el = document.querySelector(s) as HTMLElement;
+          return sum + (el.getBoundingClientRect().height - window.innerHeight) / window.innerHeight;
+        }, 0),
+      pins.map((p) => p.runway),
+    );
+    expect(held, "total pinned scroll, in screens").toBeLessThan(6);
+
+    for (const pin of pins) {
+      const top = await page.evaluate(
+        (s) => (document.querySelector(s) as HTMLElement).getBoundingClientRect().top + window.scrollY,
+        pin.runway,
+      );
+      await wheelToYExact(page, top + 40);
+      const skip = page.locator(`${pin.runway} [data-od-id="pin-skip"]`);
+      await expect(skip, `${pin.runway} has a visible skip`).toBeVisible();
+      await skip.click();
+      // Lenis carries the page there; wait for it to arrive and stop.
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(
+              ([r, n]) => {
+                const end = (document.querySelector(r) as HTMLElement).getBoundingClientRect().bottom;
+                const next = (document.querySelector(n) as HTMLElement).getBoundingClientRect().top;
+                return Math.abs(end - 76) < 6 && next > 0 && next < window.innerHeight * 0.6;
+              },
+              [pin.runway, pin.next],
+            ),
+          { timeout: 8000, message: `${pin.runway} skip did not land on ${pin.next}` },
+        )
+        .toBe(true);
+    }
   });
 
   test("nothing blinks on the way down or back up", async ({ page }, testInfo) => {
@@ -1056,9 +1144,9 @@ test.describe("scroll-driven motion", () => {
       });
 
     const first = await range();
-    // Five beats on one pin: a little over two screens.
-    expect(first.hold / first.vh).toBeGreaterThan(2);
-    expect(first.hold / first.vh).toBeLessThan(2.4);
+    // Five beats on one pin: a screen and a half.
+    expect(first.hold / first.vh).toBeGreaterThan(1.4);
+    expect(first.hold / first.vh).toBeLessThan(1.6);
 
     /* Mid-hold of each plate. A plate is in focus from k * 2.4s of an 11.8s
        take and the cut to the next starts 0.8s before it, so these land in the
@@ -1164,8 +1252,8 @@ test.describe("scroll-driven motion", () => {
     const geo = await range();
     // One pinned beat: the frame holds for a little over one screen.
     const vh = await page.evaluate(() => window.innerHeight);
-    expect(geo.hold / vh).toBeGreaterThan(1.1);
-    expect(geo.hold / vh).toBeLessThan(1.5);
+    expect(geo.hold / vh).toBeGreaterThan(0.8);
+    expect(geo.hold / vh).toBeLessThan(1.0);
 
     const read = () =>
       page.evaluate(() => {
@@ -1252,9 +1340,9 @@ test.describe("scroll-driven motion", () => {
       vh: window.innerHeight,
     }));
 
-    // 240svh runway with a 100svh sticky panel: the stage holds for 140svh.
-    expect(heroH / vh).toBeGreaterThanOrEqual(2.35);
-    expect(heroH / vh).toBeLessThanOrEqual(2.45);
+    // 205svh runway with a 100svh sticky panel: the stage holds for 105svh.
+    expect(heroH / vh).toBeGreaterThanOrEqual(2.0);
+    expect(heroH / vh).toBeLessThanOrEqual(2.1);
 
     const read = () =>
       page.evaluate(() => {
@@ -1284,7 +1372,7 @@ test.describe("scroll-driven motion", () => {
 
     // A fifth of the way down the pin: the copy has left, the dive has begun,
     // and the figure is still in the frame.
-    await wheelToY(page, vh * 1.4 * 0.2);
+    await wheelToY(page, vh * 1.05 * 0.2);
     s = await read();
     expect(s.stickyTop, "still pinned at 20%").toBe(0);
     expect(s.copy, "the copy should have left by 20%").toBeLessThan(0.05);
@@ -1292,7 +1380,7 @@ test.describe("scroll-driven motion", () => {
     expect(s.figure, "the figure should still be in frame at 20%").toBe("visible");
 
     // Four fifths: the camera is through the notch and the figure is gone.
-    await wheelToY(page, vh * 1.4 * 0.8);
+    await wheelToY(page, vh * 1.05 * 0.8);
     s = await read();
     expect(s.stickyTop, "still pinned at 80%").toBe(0);
     expect(s.figure, "the figure should have sunk away by 80%").toBe("hidden");
@@ -1408,7 +1496,7 @@ test.describe("scroll-driven motion", () => {
     expect(s.land, "the landing is pinned under the stage").toEqual(s.stage);
 
     // Late in the pin the camera is through and the landing has resolved.
-    await wheelToYExact(page, vh * 1.4 * 0.93);
+    await wheelToYExact(page, vh * 1.05 * 0.93);
     s = await read();
     expect(s.stage.top, "still pinned at 93%").toBe(0);
     expect(s.landing, "the landing should be up by 93%").toBe("visible");
@@ -1425,7 +1513,7 @@ test.describe("scroll-driven motion", () => {
 
     // Past the release the landing leaves as ordinary page, with the next
     // section butted against it — nothing rises over anything.
-    await wheelToY(page, vh * 1.4 + vh * 0.35);
+    await wheelToY(page, vh * 1.05 + vh * 0.35);
     s = await read();
     expect(s.land.top, "the landing should be scrolling away").toBeLessThan(0);
     expect(s.land, "the stage leaves with it").toEqual(s.stage);
@@ -1576,7 +1664,13 @@ test.describe("interaction", () => {
     await page.keyboard.press("Enter");
     await expect(third).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator('[data-od-id="ask-answer"]')).toContainText("OpenAI, Claude, Gemini");
+    /* The next question is the next stop, except on a phone, where the
+       conversation opens under the question just picked and its own
+       "ask me this for real" link comes first. */
     await page.keyboard.press("Tab");
+    if (await page.locator('[data-od-id="ask-thread"] [data-ask]').evaluate((el) => el === document.activeElement)) {
+      await page.keyboard.press("Tab");
+    }
     await expect(page.locator('[data-od-id="ask-q-4"]')).toBeFocused();
     await page.keyboard.press("Space");
     await expect(page.locator('[data-od-id="ask-answer"]')).toContainText("open to a full-time role");

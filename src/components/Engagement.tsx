@@ -5,6 +5,8 @@ import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
 import { BRIEF_NEEDS, EMAIL, ENGAGEMENTS } from "@/lib/content";
 import Icon from "./Icons";
+import Ask from "./Ask";
+import SkipPin from "./SkipPin";
 
 declare global {
   interface Window {
@@ -130,6 +132,12 @@ function Facts({ index }: { index: number }) {
       <div>
         <dt>You get</dt>
         <dd>{e.get}</dd>
+      </div>
+      <div className="shape-ask">
+        <dt className="sr-only">Next</dt>
+        <dd>
+          <Ask subject={`Brief: ${e.name}`}>Start this way</Ask>
+        </dd>
       </div>
     </dl>
   );
@@ -505,6 +513,7 @@ export default function Engagement() {
             </div>
 
             <Calendar index={0} live />
+            <SkipPin runway=".shape" />
           </div>
         </div>
       )}
