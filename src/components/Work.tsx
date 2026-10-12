@@ -4,7 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
-import { CATEGORY_LABELS, PROOF_STATS, RAIL_INDEX, WORK_SEQUENCE, caseStudyPath } from "@/lib/content";
+import {
+  CATEGORY_LABELS,
+  PROOF_QUOTES,
+  PROOF_STATS,
+  RAIL_INDEX,
+  WORK_SEQUENCE,
+  caseStudyPath,
+  shotsOf,
+} from "@/lib/content";
 import Icon from "./Icons";
 import BuildReel from "./BuildReel";
 
@@ -13,8 +21,10 @@ const pad = (n: number) => String(n).padStart(2, "0");
 /**
  * Work — the dark band.
  *
- * Three parts: the head, the reel (`BuildReel`, which owns its own pin and its
- * own timeline), and the index of named projects with its category filter.
+ * In the order a visitor wants them: the named projects with their screens and
+ * a category filter, what three of those clients said, and then the reel
+ * (`BuildReel`, which owns its own pin and its own timeline) on how they are
+ * built.
  */
 export default function Work() {
   const root = useRef<HTMLElement>(null);
@@ -66,30 +76,25 @@ export default function Work() {
     <section ref={root} id="work" className="band on-dark" data-od-id="work">
       <div className="shell rail work-head pt-[clamp(56px,6.6vw,110px)] pb-[clamp(24px,2.8vw,44px)]">
         <div>
-          <div className="mb-[12px] font-display text-[13px] tracking-[0.06em] opacity-60">02</div>
+          <div className="mb-[12px] font-display text-[13px] tracking-[0.06em] opacity-60">01</div>
           <p className="eyebrow">The work</p>
           <p className="rail-index rail-index--onDark">{RAIL_INDEX.work}</p>
-          <p className="mt-[18px] max-w-[22ch] text-[13px] leading-[1.55] opacity-70">
-            One build process: scope it, structure it, then make it move.
-          </p>
         </div>
         <div>
           <h2 className="h2 text-inkfg">
-            Four kinds of build,
+            Real projects,
             <br />
-            one way of working.
+            for real clients.
           </h2>
           <p className="lede mt-[clamp(14px,1.6vw,24px)] text-[clamp(15px,1.05vw,17px)] text-inkfg/82">
-            Every project is different, but most are one of these four, or a few of them wired
-            together.
+            {WORK_SEQUENCE.length} builds, each with a page of its own. Open any one for the screens
+            and what was built.
           </p>
         </div>
       </div>
 
-      <BuildReel />
-
-      {/* The index. The reel shows kinds of build; this is where named projects
-          live, and where every project's name reaches the document. */}
+      {/* The index: where named projects live, and where every project's name
+          reaches the document. */}
       <div className="shell">
         <div className="work-index rail">
           <div>
@@ -130,6 +135,15 @@ export default function Work() {
                     className="work-index__link group"
                     aria-label={`${p.name} — read the case study`}
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      className="work-index__shot"
+                      src={shotsOf(p.id)[0].src}
+                      width={shotsOf(p.id)[0].w}
+                      height={shotsOf(p.id)[0].h}
+                      loading="lazy"
+                      alt=""
+                    />
                     <span className="work-index__num" aria-hidden="true">
                       {pad(i + 1)}
                     </span>
@@ -162,6 +176,48 @@ export default function Work() {
           </div>
         </div>
       </div>
+
+      {/* What three of those clients said: a role and a company, never a name. */}
+      <div className="shell">
+        <div className="work-quotes rail" data-od-id="proof-quotes">
+          <div>
+            <p className="eyebrow">In their words</p>
+          </div>
+          <div className="proof-quotes">
+            {PROOF_QUOTES.map((qt) => (
+              <figure key={qt.project} className="proof-quote">
+                <blockquote>&ldquo;{qt.quote}&rdquo;</blockquote>
+                <figcaption>
+                  <b>{qt.name}</b>
+                  <span>{qt.role}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="shell rail pt-[clamp(40px,5vw,80px)] pb-[clamp(24px,2.8vw,44px)]">
+        <div>
+          <p className="eyebrow">How they are built</p>
+          <p className="mt-[18px] max-w-[22ch] text-[13px] leading-[1.55] opacity-70">
+            One build process: scope it, structure it, then make it move.
+          </p>
+        </div>
+        <div>
+          <h3 className="h2 text-inkfg">
+            Four kinds of build,
+            <br />
+            one way of working.
+          </h3>
+          <p className="lede mt-[clamp(14px,1.6vw,24px)] text-[clamp(15px,1.05vw,17px)] text-inkfg/82">
+            Every project is different, but most are one of these four, or a few of them wired
+            together.
+          </p>
+        </div>
+      </div>
+
+      <BuildReel />
     </section>
   );
 }

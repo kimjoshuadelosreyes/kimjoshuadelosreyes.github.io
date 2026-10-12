@@ -27,8 +27,8 @@ export default function Page() {
           simply follows it — nothing rises over anything.
         */}
         <div className="relative z-40 bg-canvas">
-          <SystemFlow />
           <Work />
+          <SystemFlow />
           <Capabilities />
           <Engagement />
           <Testimonials />

@@ -2790,6 +2790,23 @@
     opacity: 0.6;
     transform: none;
   }
+  .work-index__shot {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    object-position: top;
+    margin-bottom: 10px;
+    border: 1px solid color-mix(in oklab, var(--color-inkfg) 12%, transparent);
+    border-radius: var(--radius-base);
+  }
+  .work-quotes { padding-bottom: clamp(48px, 6vw, 96px); }
+  .work-quotes .proof-quotes { margin-top: 0; }
+  .on-dark .proof-quote { background: var(--color-inksurface); border-color: color-mix(in oklab, var(--color-inkfg) 10%, transparent); }
+  .on-dark .proof-quote blockquote { color: var(--color-inkfg); }
+  .on-dark .proof-quote figcaption { color: color-mix(in oklab, var(--color-inkfg) 62%, transparent); }
+  .on-dark .proof-quote figcaption b { color: var(--color-inkfg); }
   .work-index__num { font-family: var(--font-display); font-size: 12px; opacity: 0.45; }
   .work-index__tag {
     font-size: 11px;

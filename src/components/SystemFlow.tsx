@@ -466,7 +466,7 @@ export default function SystemFlow() {
       {/* Intro band — the section's own heading, before the frame */}
       <div className="shell rail sys-head pt-[clamp(64px,9vw,148px)] pb-[clamp(36px,4.4vw,72px)]">
         <div>
-          <div className="mb-[14px] font-display text-[13px] tracking-[0.06em] text-brown">01</div>
+          <div className="mb-[14px] font-display text-[13px] tracking-[0.06em] text-brown">02</div>
           <p className="eyebrow">{FLOW.eyebrow}</p>
           <p className="rail-index">{RAIL_INDEX.about}</p>
           <p className="mt-[22px] max-w-[22ch] text-[13px] leading-[1.55] text-brown">{FLOW.aside}</p>

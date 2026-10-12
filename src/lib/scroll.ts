@@ -16,6 +16,8 @@ export const setLenis = (lenis: Lenis | null) => {
   instance = lenis;
 };
 
+export const getLenis = () => instance;
+
 export function scrollToY(y: number) {
   if (instance) {
     instance.scrollTo(y, { duration: 1.1 });

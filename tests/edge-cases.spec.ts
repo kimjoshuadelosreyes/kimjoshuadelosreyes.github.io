@@ -238,6 +238,32 @@ test.describe("QAQC: Case studies (/work/[id])", () => {
     expect(bag.consoleErrors).toEqual([]);
   });
 
+  test("a link from far down the home page opens the next page at its top, not its footer", async ({ page }) => {
+    await page.goto("/", { waitUntil: "load", timeout: 120_000 });
+    await page.waitForTimeout(2000);
+
+    const link = page.locator('.work-index__link[href="/work/passivae/"]');
+    await link.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1200);
+    await link.click();
+    await page.waitForURL("**/work/passivae/");
+    await page.waitForTimeout(2000);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(page.locator("h1")).toBeInViewport();
+
+    // And from one case study to the next.
+    await page.locator(".case-nav__link--next").click();
+    await page.waitForURL("**/work/trestle/");
+    await page.waitForTimeout(2000);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+    // "All work" goes back to the section it names.
+    await page.locator(".case-back").click();
+    await page.waitForURL("**/#work");
+    await page.waitForTimeout(2500);
+    await expect(page.locator("#work h2")).toBeInViewport();
+  });
+
   test("a project with no public address says its screens are from a local build", async ({ page }) => {
     const bag = watchForErrors(page);
     await page.goto("/work/trestle");

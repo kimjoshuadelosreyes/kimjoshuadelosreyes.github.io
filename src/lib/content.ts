@@ -11,8 +11,8 @@ export const EMAIL = "kimjoshuadr@gmail.com";
 export const mailTo = (subject: string) => `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}`;
 
 export const NAV_LINKS = [
-  { id: "about", label: "How it works" },
   { id: "work", label: "Projects" },
+  { id: "about", label: "How it works" },
   { id: "capabilities", label: "What you get" },
   { id: "engagement", label: "Services" },
   { id: "testimonials", label: "Proof" },

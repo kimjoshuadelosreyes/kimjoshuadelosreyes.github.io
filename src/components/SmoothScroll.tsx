@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
-import { setLenis } from "@/lib/scroll";
+import { getLenis, setLenis } from "@/lib/scroll";
 
 /**
  * Lenis drives the page; GSAP's ticker drives Lenis, and ScrollTrigger listens
@@ -12,6 +13,38 @@ import { setLenis } from "@/lib/scroll";
  * position stays authoritative for pinning.
  */
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
+  /* This component lives in the layout, so Lenis outlives a page change and so
+     does the scroll target it keeps. Next puts a new page at its top, Lenis then
+     carries it back to where the last page was, and on a shorter page that is
+     the footer. So each new path starts Lenis again from where the page should
+     open: the top, or the section named in the address. */
+  const pathname = usePathname();
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const lenis = getLenis();
+    if (!lenis) return;
+    const land = () => {
+      const hash = window.location.hash;
+      const target = hash.length > 1 ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+      lenis.resize();
+      lenis.scrollTo(target ?? 0, { immediate: true, force: true });
+      ScrollTrigger.refresh();
+    };
+    land();
+    /* And again once the new page has settled: sections above a named one swap
+       to their stacked layout just after mount, which moves it. */
+    const id = window.requestAnimationFrame(land);
+    const late = window.location.hash.length > 1 ? window.setTimeout(land, 450) : 0;
+    return () => {
+      window.cancelAnimationFrame(id);
+      window.clearTimeout(late);
+    };
+  }, [pathname]);
+
   /* Several sections swap to a shorter stacked layout just after mount, and a
      reader can change the page's height later too (the FAQ, the brief). Scroll
      triggers store their positions when they are built, so one made before

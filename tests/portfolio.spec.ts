@@ -482,7 +482,8 @@ test.describe("page boots", () => {
     await page.goto("/", { waitUntil: "load", timeout: 120_000 });
     await page.waitForTimeout(1200);
 
-    await expect(page.locator("#work h2")).toContainText("Four kinds of build");
+    await expect(page.locator("#work h2")).toContainText("Real projects");
+    await expect(page.locator("#work h3.h2")).toContainText("Four kinds of build");
     await expect(page.locator(".work-index__name")).toHaveText([
       "CoRemote",
       "Passivae",
@@ -1103,9 +1104,9 @@ test.describe("scroll-driven motion", () => {
     /* Five pins, five ways past them. Pressing one carries the page to the end
        of that runway — the pin has let go and the next thing is under the nav. */
     const pins = [
-      { runway: ".hero", next: "#about" },
-      { runway: ".sys", next: "#work" },
-      { runway: ".reel", next: ".work-index" },
+      { runway: ".hero", next: "#work" },
+      { runway: ".reel", next: "#about" },
+      { runway: ".sys", next: "#capabilities" },
       { runway: ".dial", next: "#engagement" },
       { runway: ".shape", next: ".brief" },
     ];
@@ -1578,7 +1579,7 @@ test.describe("scroll-driven motion", () => {
           landing: getComputedStyle(g(".hero-landing")).visibility,
           stage: box(".hero-stage"),
           land: box(".hero-landing"),
-          next: box("#about"),
+          next: box("#work"),
           cards: [...document.querySelectorAll(".hero-card")].map((el) => {
             const r = el.getBoundingClientRect();
             return {
@@ -1949,8 +1950,8 @@ test.describe("case studies", () => {
 
     await expect(page.locator(".case-quote blockquote")).toContainText("I sleep better anyway");
 
-    // Bare `#about` would resolve to /work/owwo#about, which does not exist.
-    await expect(page.locator("header nav a").first()).toHaveAttribute("href", "/#about");
+    // Bare `#work` would resolve to /work/owwo#work, which does not exist.
+    await expect(page.locator("header nav a").first()).toHaveAttribute("href", "/#work");
     await expect(page.locator('footer a[href="/#work"]')).toHaveCount(1);
     await expect(page.getByRole("link", { name: "Start a project" }).first()).toBeVisible();
   });

@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
-import { HERO, PROMISES, PROOF_FACTS, PROOF_QUOTES } from "@/lib/content";
+import { HERO, PROMISES, PROOF_FACTS } from "@/lib/content";
 import { WORDMARK_PATHS, WORDMARK_VIEWBOX } from "./Wordmark";
 import Ask from "./Ask";
 
@@ -18,8 +18,7 @@ import Ask from "./Ask";
  *      taken apart — outlines, class names, and the timeline that drives it,
  *      drawn from the hero's real cue times. The move is a WIPE under the
  *      reader's own hand: drag it, or use the arrow keys.
- *   2. What clients said, attributed to a role and a company.
- *   3. The working agreement: four promises, each underlined in ink as it
+ *   2. The working agreement: four promises, each underlined in ink as it
  *      arrives, and signed. The move is HANDWRITING.
  *
  * Nothing here is pinned and nothing is scrubbed: after five held sections the
@@ -300,24 +299,11 @@ export default function Testimonials() {
         </ul>
       </div>
 
-      {/* 2 — what clients said */}
-      <div className="proof-quotes shell" data-od-id="proof-quotes">
-        {PROOF_QUOTES.map((qt, i) => (
-          <figure key={i} className="proof-quote">
-            <blockquote>&ldquo;{qt.quote}&rdquo;</blockquote>
-            <figcaption>
-              <b>{qt.name}</b>
-              <span>{qt.role}</span>
-            </figcaption>
-          </figure>
-        ))}
-      </div>
-
-      {/* 3 — the working agreement */}
+      {/* 2 — the working agreement */}
       <div className="pact shell" data-od-id="pact">
         <div className="pact-intro">
           <p className="eyebrow">The working agreement</p>
-          <h3 className="pact-heading">And here is what I put in writing before we start.</h3>
+          <h3 className="pact-heading">Here is what I put in writing before we start.</h3>
         </div>
 
         <ol className="pact-list">
