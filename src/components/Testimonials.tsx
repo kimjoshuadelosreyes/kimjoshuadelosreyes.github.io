@@ -227,7 +227,7 @@ export default function Testimonials() {
     <section ref={root} id="testimonials" data-od-id="testimonials">
       <div className="shell rail proof-head pt-[clamp(64px,9vw,148px)] pb-[clamp(28px,3.4vw,56px)]">
         <div>
-          <div className="mb-[14px] font-display text-[13px] tracking-[0.06em] text-brown">05</div>
+          <div className="mb-[14px] font-display text-[13px] tracking-[0.06em] text-brown">06</div>
           <p className="eyebrow">Proof</p>
           <p className="rail-index">{PROOF_FACTS.length} facts · {PROMISES.length} promises</p>
           <p className="mt-[22px] max-w-[22ch] text-[13px] leading-[1.55] text-brown">

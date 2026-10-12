@@ -1,4 +1,5 @@
 import { EMAIL, FAQS, STACK, WORK_SEQUENCE } from "./content";
+import { AUTOMATION_PAGES } from "./automations";
 
 /**
  * Everything a search engine or a link preview is told about the site, in one
@@ -33,6 +34,8 @@ export const ROUTES: Route[] = [
   { path: "/", priority: 1, changeFrequency: "monthly" },
   { path: "/archive/", priority: 0.5, changeFrequency: "yearly" },
   ...WORK_SEQUENCE.map((p): Route => ({ path: `/work/${p.id}/`, priority: 0.6, changeFrequency: "yearly" })),
+  { path: "/automations/", priority: 0.7, changeFrequency: "monthly" },
+  ...AUTOMATION_PAGES.map((p): Route => ({ path: `/automations/${p.id}/`, priority: p.kind === "system" ? 0.6 : 0.4, changeFrequency: "yearly" })),
 ];
 
 /* ------------------------------------------------------------------ *

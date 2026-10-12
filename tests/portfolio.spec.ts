@@ -1069,7 +1069,7 @@ test.describe("scroll-driven motion", () => {
     /* A reader convinced half-way down should not have to reach the bottom to
        act on it. Every section carries at least one link straight to the
        inbox, and the in-section ones say what the reader was looking at. */
-    for (const id of ["top", "about", "work", "capabilities", "engagement", "testimonials", "faq"]) {
+    for (const id of ["top", "about", "automations", "work", "capabilities", "engagement", "testimonials", "faq"]) {
       const links = page.locator(`#${id} a[href^="mailto:kimjoshuadr@gmail.com"]`);
       expect(await links.count(), `#${id} has no way to get in touch`).toBeGreaterThanOrEqual(1);
     }
@@ -1078,8 +1078,8 @@ test.describe("scroll-driven motion", () => {
     const asks = await page.locator("[data-ask]").evaluateAll((els) =>
       els.map((el) => ({ href: decodeURIComponent(el.getAttribute("href") ?? ""), text: (el.textContent ?? "").trim() })),
     );
-    // 1 flow + 5 reel + 6 dial + 4 ways to work + 1 proof + 2 FAQ.
-    expect(asks.length).toBe(19);
+    // 1 flow + 1 automations + 5 reel + 6 dial + 4 ways to work + 1 proof + 2 FAQ.
+    expect(asks.length).toBe(20);
     for (const a of asks) {
       expect(a.href, `"${a.text}" has no subject`).toMatch(/^mailto:kimjoshuadr@gmail\.com\?subject=.{4,}/);
       expect(a.text.length, "an ask has no label").toBeGreaterThan(3);
@@ -1106,7 +1106,7 @@ test.describe("scroll-driven motion", () => {
     const pins = [
       { runway: ".hero", next: "#work" },
       { runway: ".reel", next: "#about" },
-      { runway: ".sys", next: "#capabilities" },
+      { runway: ".sys", next: "#automations" },
       { runway: ".dial", next: "#engagement" },
       { runway: ".shape", next: ".brief" },
     ];

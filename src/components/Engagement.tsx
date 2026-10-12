@@ -454,7 +454,7 @@ export default function Engagement() {
     <section ref={root} id="engagement" data-od-id="engagement">
       <div className="shell rail eng-head pt-[clamp(64px,9vw,148px)] pb-[clamp(28px,3.4vw,56px)]">
         <div>
-          <div className="mb-[14px] font-display text-[13px] tracking-[0.06em] text-brown">04</div>
+          <div className="mb-[14px] font-display text-[13px] tracking-[0.06em] text-brown">05</div>
           <p className="eyebrow">Ways to work</p>
           <p className="rail-index">
             {N} arrangements · no packages

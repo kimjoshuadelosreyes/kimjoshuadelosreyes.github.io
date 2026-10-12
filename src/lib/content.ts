@@ -13,6 +13,7 @@ export const mailTo = (subject: string) => `mailto:${EMAIL}?subject=${encodeURIC
 export const NAV_LINKS = [
   { id: "work", label: "Projects" },
   { id: "about", label: "How it works" },
+  { id: "automations", label: "Automations" },
   { id: "capabilities", label: "What you get" },
   { id: "engagement", label: "Services" },
   { id: "testimonials", label: "Proof" },

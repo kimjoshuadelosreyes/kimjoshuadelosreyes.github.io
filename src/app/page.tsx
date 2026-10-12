@@ -2,6 +2,7 @@ import Nav from "@/components/Nav";
 import Density from "@/components/Density";
 import Hero from "@/components/Hero";
 import SystemFlow from "@/components/SystemFlow";
+import Automations from "@/components/Automations";
 import Work from "@/components/Work";
 import Capabilities from "@/components/Capabilities";
 import Engagement from "@/components/Engagement";
@@ -29,6 +30,7 @@ export default function Page() {
         <div className="relative z-40 bg-canvas">
           <Work />
           <SystemFlow />
+          <Automations />
           <Capabilities />
           <Engagement />
           <Testimonials />
