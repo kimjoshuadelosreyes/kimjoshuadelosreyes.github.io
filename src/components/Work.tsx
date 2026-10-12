@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
-import { RAIL_INDEX, WORK_SEQUENCE, caseStudyPath } from "@/lib/content";
+import { CATEGORY_LABELS, PROOF_STATS, RAIL_INDEX, WORK_SEQUENCE, caseStudyPath } from "@/lib/content";
 import Icon from "./Icons";
 import BuildReel from "./BuildReel";
 
@@ -21,20 +21,12 @@ export default function Work() {
   const [compact, setCompact] = useState(false);
   const [category, setCategory] = useState<string>("all");
 
-  const counts = {
-    all: WORK_SEQUENCE.length,
-    "ai-automation": WORK_SEQUENCE.filter((p) => p.category === "ai-automation").length,
-    webflow: WORK_SEQUENCE.filter((p) => p.category === "webflow").length,
-    enterprise: WORK_SEQUENCE.filter((p) => p.category === "enterprise").length,
-    saas: WORK_SEQUENCE.filter((p) => p.category === "saas").length,
-  };
-
+  /* One tab per category that has a project in it, so a tab is never empty. */
   const TABS = [
-    { id: "all", label: "All Projects", count: counts.all },
-    { id: "ai-automation", label: "AI & Automations", count: counts["ai-automation"] },
-    { id: "webflow", label: "Webflow", count: counts.webflow },
-    { id: "enterprise", label: "Biotech & Enterprise", count: counts.enterprise },
-    { id: "saas", label: "SaaS & Web3", count: counts.saas },
+    { id: "all", label: "All projects", count: WORK_SEQUENCE.length },
+    ...Object.entries(CATEGORY_LABELS)
+      .map(([id, label]) => ({ id, label, count: WORK_SEQUENCE.filter((p) => p.category === id).length }))
+      .filter((t) => t.count > 0),
   ];
 
   const filteredWork = category === "all"
@@ -103,7 +95,8 @@ export default function Work() {
           <div>
             <p className="eyebrow">The full index</p>
             <p className="work-index__note">
-              Nine industries, one build process: scope it, structure it, then make it move.
+              {new Set(WORK_SEQUENCE.map((p) => p.tag)).size} sectors, one build process: scope it,
+              structure it, then make it move.
             </p>
           </div>
           <div>
@@ -155,13 +148,14 @@ export default function Work() {
 
             <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-inksurface pt-6">
               <span className="text-[13px] text-inkfg/60">
-                Showing {filteredWork.length} of {WORK_SEQUENCE.length} featured projects · Over 80+ delivered across 7 years
+                Showing {filteredWork.length} of {WORK_SEQUENCE.length} featured projects ·{" "}
+                {PROOF_STATS.map((st) => `${st.value} ${st.label}`).join(" · ")}
               </span>
               <Link
                 href="/archive"
                 className="btn btn--onDark inline-flex items-center gap-2 rounded-full px-5 py-2 text-[13px] font-medium transition-all"
               >
-                <span>Explore Full Project Archive (80+)</span>
+                <span>See every client in the archive</span>
                 <Icon name="arrow" className="h-3 w-3" />
               </Link>
             </div>

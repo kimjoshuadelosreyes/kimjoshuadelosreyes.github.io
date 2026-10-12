@@ -1,7 +1,26 @@
-# NESH® — Next.js + GSAP rebuild
+# Kim Joshua — portfolio
 
-A full rebuild of the NESH® portfolio as a **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4**
-project, with the original's cinematic motion system reproduced in **GSAP 3.15**.
+Kim Joshua's portfolio: a **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4** site with a
+scroll-driven motion system in **GSAP 3.15**.
+
+## The work it shows
+
+Every project, archive row, quote and number comes from `src/lib/content.ts`.
+
+- `PROJECTS` are the twelve builds with a page at `/work/<id>`. `ARCHIVE_PROJECTS` adds every other
+  client as a row on `/archive`.
+- Everything stated about a client is already public, on their own site or in the published case
+  study. There are no per-project figures, and no person is named: a quote is attributed to a role
+  and a company.
+- `techStack` is read from each project's own dependencies and left out where they could not be read.
+- The screens live in `public/img/work/<id>/{desktop,tablet,mobile}.webp`. Re-shoot them with
+  `node scripts/capture-work.cjs [id ...]`. Projects without a public address are captured from a
+  local run on demo data (`id=http://localhost:PORT/`), and their page says so. Look at every image
+  before committing it.
+
+The sections below are the build log. Some of its older entries describe content that has since been
+replaced (the Journey section, the first set of projects and testimonials); the code is the record
+of what is there now.
 
 ## Stack
 
@@ -1265,11 +1284,10 @@ The index row's grid lives on the anchor rather than the `<li>`, so the whole ro
 instead of just the name, and the anchor bleeds outward by its own padding so the hover surface
 reads as a panel while the text stays aligned with the column heading above it.
 
-**These pages are deliberately thin, and that is the honest state of the content.** The only case
-study material that exists is what the work band already shows: the industry, the name, one sentence
-of copy, the screen, and — for Alosant alone — a client testimonial that names them. Nothing here
-invents a role, a timeline or an outcome, because a portfolio that fabricates a client result is
-worse than one with a short page. Everything renders from `content.ts`; fill in more there and these
+**These pages say only what is published.** Each has the sector, the name, what the project is, what
+was built, three screens, and a client quote for the three clients who gave one. Nothing here
+invents a timeline or an outcome, because a portfolio that fabricates a client result is worse than
+one with a short page. Everything renders from `content.ts`; fill in more there and these
 grow.
 
 The plate is capped at its own pixel width. Three of the nine sources are small logos, and blowing

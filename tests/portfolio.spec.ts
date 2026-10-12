@@ -231,13 +231,13 @@ test.describe("page boots", () => {
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
     expect(locs[0]).toBe(head.canonical);
     expect(locs.some((l) => l.endsWith("/archive/"))).toBe(true);
-    expect(locs.filter((l) => l.includes("/work/")).length).toBe(9);
+    expect(locs.filter((l) => l.includes("/work/")).length).toBe(12);
     expect(new Set(locs).size, "duplicate sitemap entries").toBe(locs.length);
 
     // A case study has its own title and its own canonical.
-    await page.goto("/work/puck/", { waitUntil: "load" });
-    expect(await page.title()).toBe("Puck — AI & SaaS | Kim Joshua");
-    expect(await page.locator('link[rel="canonical"]').getAttribute("href")).toMatch(/\/work\/puck\/$/);
+    await page.goto("/work/passivae/", { waitUntil: "load" });
+    expect(await page.title()).toBe("Passivae — Recruitment platform | Kim Joshua");
+    expect(await page.locator('link[rel="canonical"]').getAttribute("href")).toMatch(/\/work\/passivae\/$/);
     expect(await page.locator("h1").count()).toBe(1);
   });
 
@@ -484,15 +484,18 @@ test.describe("page boots", () => {
 
     await expect(page.locator("#work h2")).toContainText("Four kinds of build");
     await expect(page.locator(".work-index__name")).toHaveText([
-      "1910.ai",
-      "SemiconBio",
-      "Happy Ring",
-      "Omicron",
-      "Puck",
-      "Alosant",
-      "Lilipad",
-      "PSSLTD",
-      "RAY AI",
+      "CoRemote",
+      "Passivae",
+      "Trestle",
+      "Tally",
+      "monno",
+      "Funnel Foundry",
+      "OWWO Chicken",
+      "Construction Hub PH",
+      "Budi",
+      "Funded Prop Traders",
+      "CK Propfirm",
+      "WChampFX",
     ]);
 
     // Four plates and four captions either way, and never both branches at once.
@@ -589,19 +592,22 @@ test.describe("page boots", () => {
       .evaluateAll((els) => els.map((el) => (el as HTMLAnchorElement).getAttribute("href")));
 
     expect(rows).toEqual([
-      "/work/1910/",
-      "/work/semiconbio/",
-      "/work/happyring/",
-      "/work/omicron/",
-      "/work/puck/",
-      "/work/alosant/",
-      "/work/lilipad/",
-      "/work/pssltd/",
-      "/work/rayai/",
+      "/work/coremote/",
+      "/work/passivae/",
+      "/work/trestle/",
+      "/work/tally/",
+      "/work/monno/",
+      "/work/funnel-foundry/",
+      "/work/owwo/",
+      "/work/construction-hub/",
+      "/work/budi/",
+      "/work/funded-prop-traders/",
+      "/work/ck-propfirm/",
+      "/work/wchampfx/",
     ]);
     // One destination each — nothing in the list points at a page that
     // `generateStaticParams` does not build.
-    expect(new Set(rows).size).toBe(9);
+    expect(new Set(rows).size).toBe(12);
   });
 
   test("the capabilities render the branch that suits the viewport", async ({ page, isMobile }) => {
@@ -908,15 +914,18 @@ test.describe("page boots", () => {
     ]);
   });
 
-  test("proof: quote slots are labelled placeholders and the agreement is signed", async ({ page }) => {
+  test("proof: quotes name a role and a company, never a person, and the agreement is signed", async ({ page }) => {
     await page.goto("/", { waitUntil: "load", timeout: 120_000 });
     await page.waitForTimeout(1500);
 
-    // No invented people: every quote card says what it is.
     const quotes = page.locator(".proof-quote");
     await expect(quotes).toHaveCount(3);
-    await expect(page.locator(".proof-quote .proof-quote-flag")).toHaveCount(3);
-    await expect(page.locator("#testimonials")).not.toContainText(/Nenad|Danette|Chrissy|Petar|Klemen|Johana|Bart|Marko/);
+    await expect(page.locator(".proof-quote figcaption")).toHaveText([
+      /CEO\s*OWWO Chicken/,
+      /CEO\s*Passivae/,
+      /CEO\s*Construction Hub PH/,
+    ]);
+    await expect(page.locator("#testimonials")).not.toContainText(/Placeholder|\[Client|Nenad|Troy|Shay|Ericka/);
 
     await expect(page.locator(".pact-title")).toHaveText([
       "You own everything.",
@@ -1881,15 +1890,18 @@ test.describe("reduced motion", () => {
 
 test.describe("case studies", () => {
   const CASES = [
-    { id: "1910", name: "1910.ai" },
-    { id: "semiconbio", name: "SemiconBio" },
-    { id: "happyring", name: "Happy Ring" },
-    { id: "omicron", name: "Omicron" },
-    { id: "puck", name: "Puck" },
-    { id: "alosant", name: "Alosant" },
-    { id: "lilipad", name: "Lilipad" },
-    { id: "pssltd", name: "PSSLTD" },
-    { id: "rayai", name: "RAY AI" },
+    { id: "coremote", name: "CoRemote" },
+    { id: "passivae", name: "Passivae" },
+    { id: "trestle", name: "Trestle" },
+    { id: "tally", name: "Tally" },
+    { id: "monno", name: "monno" },
+    { id: "funnel-foundry", name: "Funnel Foundry" },
+    { id: "owwo", name: "OWWO Chicken" },
+    { id: "construction-hub", name: "Construction Hub PH" },
+    { id: "budi", name: "Budi" },
+    { id: "funded-prop-traders", name: "Funded Prop Traders" },
+    { id: "ck-propfirm", name: "CK Propfirm" },
+    { id: "wchampfx", name: "WChampFX" },
   ];
 
   test("every project has a page that shows its screen whole and un-upscaled", async ({ page }) => {
@@ -1900,36 +1912,44 @@ test.describe("case studies", () => {
       expect(res?.status(), `/work/${c.id} should exist`).toBe(200);
       await expect(page.locator("h1"), `/work/${c.id} heading`).toHaveText(c.name);
 
-      const plate = await page.locator(".case-plate img").evaluate((el) => {
-        const img = el as HTMLImageElement;
-        const box = img.getBoundingClientRect();
-        return {
-          box: +(box.width / box.height).toFixed(3),
-          declared: +(
-            Number(img.getAttribute("width")) / Number(img.getAttribute("height"))
-          ).toFixed(3),
-          width: Math.round(box.width),
-          natural: img.naturalWidth,
-        };
-      });
-
-      expect(plate.box, `/work/${c.id} plate ratio`).toBeCloseTo(plate.declared, 2);
-      /* Three of the nine sources are small logos. Presenting them at plate size
-         would only make them soft, so each is capped at its own width — this is
-         the assertion that keeps that honest. */
-      expect(plate.width, `/work/${c.id} must not be blown past its own pixels`).toBeLessThanOrEqual(
-        plate.natural + 1,
+      const shots = await page.locator(".case-shot img").evaluateAll((els) =>
+        els.map((el) => {
+          const img = el as HTMLImageElement;
+          const box = img.getBoundingClientRect();
+          return {
+            box: +(box.width / box.height).toFixed(2),
+            declared: +(Number(img.getAttribute("width")) / Number(img.getAttribute("height"))).toFixed(2),
+            width: Math.round(box.width),
+            natural: Number(img.getAttribute("width")),
+          };
+        }),
       );
+
+      expect(shots.length, `/work/${c.id} screens`).toBe(3);
+      for (const shot of shots) {
+        expect(shot.box, `/work/${c.id} screen ratio`).toBeCloseTo(shot.declared, 1);
+        /* A screen is never shown wider than it was captured. */
+        expect(shot.width, `/work/${c.id} must not be blown past its own pixels`).toBeLessThanOrEqual(
+          shot.natural + 1,
+        );
+      }
+    }
+  });
+
+  test("nothing from the template is left on any page", async ({ page }) => {
+    for (const path of ["/", "/archive", "/work/passivae", "/work/trestle"]) {
+      await page.goto(path, { waitUntil: "load", timeout: 120_000 });
+      const text = await page.locator("body").innerText();
+      expect(text, path).not.toMatch(/Nenad|Alosant|1910\.ai|SemiconBio|RAY AI|\[Client|Placeholder|80\+|7 years/);
     }
   });
 
   test("a case study links back into the home page, not to dead hashes", async ({ page }) => {
-    await page.goto("/work/alosant", { waitUntil: "load", timeout: 120_000 });
+    await page.goto("/work/owwo", { waitUntil: "load", timeout: 120_000 });
 
-    // Alosant is the one client a testimonial actually names.
-    await expect(page.locator(".case-quote blockquote")).toContainText("fantastic partner");
+    await expect(page.locator(".case-quote blockquote")).toContainText("I sleep better anyway");
 
-    // Bare `#about` would resolve to /work/alosant#about, which does not exist.
+    // Bare `#about` would resolve to /work/owwo#about, which does not exist.
     await expect(page.locator("header nav a").first()).toHaveAttribute("href", "/#about");
     await expect(page.locator('footer a[href="/#work"]')).toHaveCount(1);
     await expect(page.getByRole("link", { name: "Start a project" }).first()).toBeVisible();
@@ -2003,13 +2023,13 @@ test.describe("responsive", () => {
 
   test("every case study page holds up, floor to ultrawide", async ({ browser, isMobile }) => {
     test.skip(isMobile, "makes its own viewports; runs once");
-    /* Thirty-eight navigations: nine pages at two widths plus the full sweep on
+    /* Forty-odd navigations: twelve pages at two widths plus the full sweep on
        one of them. The default 120s budget does not fit that, and a timeout here
        reads as a layout failure. */
-    test.setTimeout(420_000);
+    test.setTimeout(540_000);
 
-    /* The nine ids come from the home page's own links rather than a typed list,
-       so a tenth project is covered the day it ships. */
+    /* The ids come from the home page's own links rather than a typed list,
+       so a new project is covered the day it ships. */
     const home = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const homePage = await home.newPage();
     await homePage.goto("/", { waitUntil: "load", timeout: 120_000 });
@@ -2022,9 +2042,9 @@ test.describe("responsive", () => {
       ),
     ];
     await home.close();
-    expect(paths.length, "the home page should link every case study").toBe(9);
+    expect(paths.length, "the home page should link every case study").toBe(12);
 
-    /* All nine at the floor and at the default width: a project's own image ratio
+    /* Every one at the floor and at the default width: a project's own image ratio
        is the thing that could push its page sideways. */
     for (const path of paths) {
       for (const [w, h] of [
@@ -2050,7 +2070,7 @@ test.describe("responsive", () => {
       }
     }
 
-    /* And the full sweep on one of them, since all nine share a layout. */
+    /* And the full sweep on one of them, since they all share a layout. */
     for (const [w, h] of SIZES) {
       const context = await browser.newContext({ viewport: { width: w, height: h } });
       const page = await context.newPage();

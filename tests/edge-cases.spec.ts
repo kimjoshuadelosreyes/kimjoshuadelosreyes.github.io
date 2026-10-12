@@ -30,69 +30,42 @@ test.describe("QAQC: High-Volume Projects & Category Filtering (Home /#work)", (
     const workSection = page.locator("#work");
     await expect(workSection).toBeVisible();
 
-    // Check filter tab buttons
-    const allTab = workSection.getByRole("button", { name: /All Projects/i });
-    const aiTab = workSection.getByRole("button", { name: /AI & Automations/i });
-    const webflowTab = workSection.getByRole("button", { name: /Webflow/i });
-    const enterpriseTab = workSection.getByRole("button", { name: /Biotech & Enterprise/i });
-    const saasTab = workSection.getByRole("button", { name: /SaaS & Web3/i });
+    // One tab per category that has a project in it.
+    const allTab = workSection.getByRole("button", { name: /All projects/i });
+    const saasTab = workSection.getByRole("button", { name: /SaaS & platforms/i });
+    const sitesTab = workSection.getByRole("button", { name: /Websites/i });
 
     await expect(allTab).toBeVisible();
-    await expect(aiTab).toBeVisible();
-    await expect(webflowTab).toBeVisible();
-    await expect(enterpriseTab).toBeVisible();
     await expect(saasTab).toBeVisible();
+    await expect(sitesTab).toBeVisible();
+    // No project with a page is in these, so they get no tab.
+    await expect(workSection.getByRole("button", { name: /E-commerce|Community/i })).toHaveCount(0);
 
-    // Default: All 9 projects active
     await expect(allTab).toHaveClass(/bg-electric/);
-    const initialItems = workSection.locator(".work-index__item");
-    const initialCount = await initialItems.count();
-    expect(initialCount).toBe(9);
+    const items = workSection.locator(".work-index__item");
+    await expect(items).toHaveCount(12);
 
-    // Filter by AI & Automations (Puck, RAY AI = 2)
-    await aiTab.click();
-    await expect(aiTab).toHaveClass(/bg-electric/);
-    await expect(allTab).not.toHaveClass(/bg-electric/);
-    
-    const aiItems = workSection.locator(".work-index__item");
-    await expect(aiItems).toHaveCount(2);
-    await expect(workSection.locator(".work-index__item", { hasText: "Puck" })).toBeVisible();
-    await expect(workSection.locator(".work-index__item", { hasText: "RAY AI" })).toBeVisible();
-
-    // Filter by Biotech & Enterprise (1910.ai, SemiconBio, PSSLTD = 3)
-    await enterpriseTab.click();
-    await expect(enterpriseTab).toHaveClass(/bg-electric/);
-    const entItems = workSection.locator(".work-index__item");
-    await expect(entItems).toHaveCount(3);
-    await expect(workSection.locator(".work-index__item", { hasText: "1910.ai" })).toBeVisible();
-    await expect(workSection.locator(".work-index__item", { hasText: "SemiconBio" })).toBeVisible();
-    await expect(workSection.locator(".work-index__item", { hasText: "PSSLTD" })).toBeVisible();
-
-    // Filter by Webflow (Alosant, Lilipad = 2)
-    await webflowTab.click();
-    await expect(webflowTab).toHaveClass(/bg-electric/);
-    const webflowItems = workSection.locator(".work-index__item");
-    await expect(webflowItems).toHaveCount(2);
-    await expect(workSection.locator(".work-index__item", { hasText: "Alosant" })).toBeVisible();
-    await expect(workSection.locator(".work-index__item", { hasText: "Lilipad" })).toBeVisible();
-
-    // Filter by SaaS & Web3 (Happy Ring, Omicron = 2)
     await saasTab.click();
     await expect(saasTab).toHaveClass(/bg-electric/);
-    const saasItems = workSection.locator(".work-index__item");
-    await expect(saasItems).toHaveCount(2);
-    await expect(workSection.locator(".work-index__item", { hasText: "Happy Ring" })).toBeVisible();
-    await expect(workSection.locator(".work-index__item", { hasText: "Omicron" })).toBeVisible();
+    await expect(allTab).not.toHaveClass(/bg-electric/);
+    await expect(items).toHaveCount(7);
+    await expect(workSection.locator(".work-index__item", { hasText: "Passivae" })).toBeVisible();
+    await expect(workSection.locator(".work-index__item", { hasText: "Trestle" })).toBeVisible();
+    await expect(workSection.locator(".work-index__item", { hasText: "OWWO Chicken" })).toHaveCount(0);
 
-    // Return to All Projects
+    await sitesTab.click();
+    await expect(sitesTab).toHaveClass(/bg-electric/);
+    await expect(items).toHaveCount(5);
+    await expect(workSection.locator(".work-index__item", { hasText: "CoRemote" })).toBeVisible();
+    await expect(workSection.locator(".work-index__item", { hasText: "OWWO Chicken" })).toBeVisible();
+
     await allTab.click();
     await expect(allTab).toHaveClass(/bg-electric/);
-    await expect(workSection.locator(".work-index__item")).toHaveCount(9);
+    await expect(items).toHaveCount(12);
 
-    // Verify "Explore Full Project Archive" button links to /archive
     const archiveLink = workSection.locator("a[href='/archive/']");
     await expect(archiveLink).toBeVisible();
-    await expect(archiveLink).toHaveText(/Explore Full Project Archive/i);
+    await expect(archiveLink).toHaveText(/See every client in the archive/i);
 
     expect(bag.pageErrors).toEqual([]);
     expect(bag.consoleErrors).toEqual([]);
@@ -112,7 +85,7 @@ test.describe("QAQC: Full Project Archive Page (/archive)", () => {
     // Verify Search input
     const searchInput = page.locator("input[type='text']");
     await expect(searchInput).toBeVisible();
-    await expect(searchInput).toHaveAttribute("placeholder", /Search by client, stack/i);
+    await expect(searchInput).toHaveAttribute("placeholder", /Search by client, sector/i);
 
     // Verify Table rows exist
     const rows = page.locator("tbody tr");
@@ -134,16 +107,11 @@ test.describe("QAQC: Full Project Archive Page (/archive)", () => {
 
     const searchInput = page.locator("input[type='text']");
 
-    // 1. Search for specific tech stack keyword "n8n"
-    await searchInput.fill("n8n");
+    // 1. Search by the kind of work
+    await searchInput.fill("shopify");
     await page.waitForTimeout(200);
-
-    const n8nRows = page.locator("tbody tr");
-    const n8nCount = await n8nRows.count();
-    expect(n8nCount).toBeGreaterThanOrEqual(2);
-    // Both RAY AI and Lead Enrichment use n8n
-    await expect(page.locator("tbody tr", { hasText: "RAY AI Operations Hub" })).toBeVisible();
-    await expect(page.locator("tbody tr", { hasText: "B2B Lead Enrichment Engine" })).toBeVisible();
+    await expect(page.locator("tbody tr")).toHaveCount(1);
+    await expect(page.locator("tbody tr", { hasText: "Maison Luna" })).toBeVisible();
 
     // Clear button appears when text is present
     const clearButton = page.getByRole("button", { name: /Clear/i });
@@ -151,12 +119,12 @@ test.describe("QAQC: Full Project Archive Page (/archive)", () => {
     await clearButton.click();
     await expect(searchInput).toHaveValue("");
 
-    // 2. Case-insensitive search "PUCK"
-    await searchInput.fill("PUCK");
+    // 2. Case-insensitive search
+    await searchInput.fill("PASSIVAE");
     await page.waitForTimeout(200);
-    const puckRows = page.locator("tbody tr");
-    await expect(puckRows).toHaveCount(1);
-    await expect(puckRows.first()).toContainText("Puck");
+    const rows = page.locator("tbody tr");
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first()).toContainText("Passivae");
 
     expect(bag.pageErrors).toEqual([]);
     expect(bag.consoleErrors).toEqual([]);
@@ -201,22 +169,18 @@ test.describe("QAQC: Full Project Archive Page (/archive)", () => {
     await page.goto("/archive");
     await page.waitForLoadState("domcontentloaded");
 
-    const aiFilterBtn = page.getByRole("button", { name: /^AI & Automations/i });
-    await aiFilterBtn.click();
-    await expect(aiFilterBtn).toHaveClass(/bg-electric/);
+    const shopBtn = page.getByRole("button", { name: /^E-commerce/i });
+    await shopBtn.click();
+    await expect(shopBtn).toHaveClass(/bg-electric/);
 
-    const rows = page.locator("tbody tr");
-    const count = await rows.count();
-    expect(count).toBeGreaterThanOrEqual(4);
+    await expect(page.locator("tbody tr")).toHaveCount(2);
+    await expect(page.locator("tbody tr", { hasText: "The Flowershop PH" })).toBeVisible();
+    await expect(page.locator("tbody tr", { hasText: "Maison Luna" })).toBeVisible();
+    await expect(page.locator("tbody tr", { hasText: "Passivae" })).toHaveCount(0);
 
-    // Verify that known AI projects are displayed
-    await expect(page.locator("tbody tr", { hasText: "RAY AI Operations Hub" })).toBeVisible();
-    await expect(page.locator("tbody tr", { hasText: "Puck Screening Pipeline" })).toBeVisible();
-    await expect(page.locator("tbody tr", { hasText: "B2B Lead Enrichment Engine" })).toBeVisible();
-
-    // Verify non-AI projects are not present
-    await expect(page.locator("tbody tr", { hasText: "1910.ai Therapeutics" })).toHaveCount(0);
-    await expect(page.locator("tbody tr", { hasText: "SemiconBio Platform" })).toHaveCount(0);
+    const communityBtn = page.getByRole("button", { name: /^Community & marketing/i });
+    await communityBtn.click();
+    await expect(page.locator("tbody tr")).toHaveCount(20);
 
     expect(bag.pageErrors).toEqual([]);
     expect(bag.consoleErrors).toEqual([]);
@@ -227,9 +191,9 @@ test.describe("QAQC: Full Project Archive Page (/archive)", () => {
     await page.goto("/archive");
     await page.waitForLoadState("domcontentloaded");
 
-    // Ray AI has a case study link
-    const rayCaseStudyLink = page.locator("a[href='/work/rayai/']").first();
-    await expect(rayCaseStudyLink).toBeVisible();
+    // A project with a page links to it; one without has no link.
+    await expect(page.locator("a[href='/work/passivae/']").first()).toBeVisible();
+    await expect(page.locator("tbody tr", { hasText: "Maison Luna" }).locator("a")).toHaveCount(0);
 
     // External links have rel="noopener noreferrer" and target="_blank"
     const externalLinks = page.locator("table a[target='_blank']");
@@ -247,88 +211,65 @@ test.describe("QAQC: Full Project Archive Page (/archive)", () => {
   });
 });
 
-test.describe("QAQC: AI & Automation Showcase (/work/[id])", () => {
-  test("case study with AI workflow (/work/rayai) renders 4-stage pipeline diagram and ROI metrics", async ({ page }) => {
+test.describe("QAQC: Case studies (/work/[id])", () => {
+  test("a live project shows three screens, the work, a link out and the client's quote", async ({ page }) => {
     const bag = watchForErrors(page);
-    await page.goto("/work/rayai");
+    await page.goto("/work/passivae");
     await page.waitForLoadState("domcontentloaded");
 
-    // 1. Workflow Architecture Diagram
-    const workflowSection = page.locator("[data-od-id='case-workflow']");
-    await expect(workflowSection).toBeVisible();
-    await expect(workflowSection.getByText(/Workflow Architecture/i)).toBeVisible();
-
-    // 4 stages (01, 02, 03, 04)
-    await expect(workflowSection.getByText("01")).toBeVisible();
-    await expect(workflowSection.getByText("02")).toBeVisible();
-    await expect(workflowSection.getByText("03")).toBeVisible();
-    await expect(workflowSection.getByText("04")).toBeVisible();
-
-    // Stage titles
-    await expect(workflowSection.getByText(/Multi-Channel Request/i)).toBeVisible();
-    await expect(workflowSection.getByText(/Intent & Context Extraction/i)).toBeVisible();
-    await expect(workflowSection.getByText(/Complexity & Guardrail Routing/i)).toBeVisible();
-    await expect(workflowSection.getByText(/Automated Execution & Delivery/i)).toBeVisible();
-
-    // Tool chips (e.g. OpenAI GPT-4o, n8n Workflow Engine)
-    await expect(workflowSection.getByText("OpenAI GPT-4o").first()).toBeVisible();
-    await expect(workflowSection.getByText("n8n Workflow Engine").first()).toBeVisible();
-
-    // 2. Quantifiable ROI / Metrics Grid
-    const impactEyebrow = page.getByText(/Impact & Proof/i);
-    await expect(impactEyebrow).toBeVisible();
-
-    await expect(page.getByText("< 45s")).toBeVisible();
-    await expect(page.getByText("Response Latency")).toBeVisible();
-    await expect(page.getByText("-68%")).toBeVisible();
-    await expect(page.getByText("Operational Overhead")).toBeVisible();
-    await expect(page.getByText("99.2%")).toBeVisible();
-    await expect(page.getByText("Task Accuracy")).toBeVisible();
-
-    expect(bag.pageErrors).toEqual([]);
-    expect(bag.consoleErrors).toEqual([]);
-  });
-
-  test("case study with AI workflow (/work/puck) renders workflow and metrics", async ({ page }) => {
-    const bag = watchForErrors(page);
-    await page.goto("/work/puck");
-    await page.waitForLoadState("domcontentloaded");
-
-    const workflowSection = page.locator("[data-od-id='case-workflow']");
-    await expect(workflowSection).toBeVisible();
-
-    // Metrics for Puck
-    await expect(page.getByText("22 hrs/wk")).toBeVisible();
-    await expect(page.getByText("Time Saved")).toBeVisible();
-    await expect(page.getByText("14x Faster")).toBeVisible();
-    await expect(page.getByText("Screening Speed")).toBeVisible();
-    await expect(page.getByText("94.8%")).toBeVisible();
-    await expect(page.getByText("Candidate Match")).toBeVisible();
-
-    expect(bag.pageErrors).toEqual([]);
-    expect(bag.consoleErrors).toEqual([]);
-  });
-
-  test("standard case study without AI workflow (/work/1910) renders gracefully without workflow diagram", async ({ page }) => {
-    const bag = watchForErrors(page);
-    await page.goto("/work/1910");
-    await page.waitForLoadState("domcontentloaded");
-
-    // Standard elements exist
-    await expect(page.locator("h1")).toContainText("1910.ai");
+    await expect(page.locator("h1")).toContainText("Passivae");
     await expect(page.getByRole("link", { name: /All work/i })).toBeVisible();
-    await expect(page.locator(".case-plate img")).toBeVisible();
+    await expect(page.locator(".case-shot img")).toHaveCount(3);
+    await expect(page.locator(".case-shot--desktop img")).toBeVisible();
+    await expect(page.locator(".case-part")).toHaveCount(6);
+
+    const out = page.getByRole("link", { name: /Visit passivae\.com/i });
+    await expect(out).toHaveAttribute("target", "_blank");
+    await expect(out).toHaveAttribute("rel", /noopener/);
+
+    // The quote is attributed to a role and a company, never a person.
+    const quote = page.locator(".case-quote");
+    await expect(quote).toContainText("No mystery config");
+    await expect(quote).toContainText("CEO");
+    await expect(quote.locator("img")).toHaveCount(0);
+
+    await expect(page.locator(".case-shots__note")).toHaveCount(0);
+    expect(bag.pageErrors).toEqual([]);
+    expect(bag.consoleErrors).toEqual([]);
+  });
+
+  test("a project with no public address says its screens are from a local build", async ({ page }) => {
+    const bag = watchForErrors(page);
+    await page.goto("/work/trestle");
+    await page.waitForLoadState("domcontentloaded");
+
+    await expect(page.locator("h1")).toContainText("Trestle");
+    await expect(page.locator(".case-shot img")).toHaveCount(3);
+    await expect(page.locator(".case-shots__note")).toContainText(/local build/i);
+    await expect(page.getByRole("link", { name: /^Visit /i })).toHaveCount(0);
+    await expect(page.locator(".case-quote")).toHaveCount(0);
     await expect(page.getByText(/Keep going/i)).toBeVisible();
 
-    // Workflow section should NOT be present
-    const workflowSection = page.locator("[data-od-id='case-workflow']");
-    await expect(workflowSection).toHaveCount(0);
-
-    // No ROI metrics grid
+    // Nothing invented: no metrics grid, no workflow diagram.
     await expect(page.getByText(/Impact & Proof/i)).toHaveCount(0);
+    await expect(page.locator("[data-od-id='case-workflow']")).toHaveCount(0);
 
     expect(bag.pageErrors).toEqual([]);
     expect(bag.consoleErrors).toEqual([]);
+  });
+
+  test("every project's three screens exist", async ({ page, request }) => {
+    await page.goto("/archive");
+    const ids = await page.locator("tbody a[href^='/work/']").evaluateAll((as) =>
+      as.map((a) => a.getAttribute("href")!.split("/")[2]),
+    );
+    expect(ids.length).toBe(12);
+    for (const id of ids) {
+      for (const d of ["desktop", "tablet", "mobile"]) {
+        const res = await request.get(`/img/work/${id}/${d}.webp`);
+        expect(res.status(), `${id}/${d}`).toBe(200);
+      }
+    }
   });
 });
 
@@ -439,9 +380,9 @@ test.describe("QAQC: Responsive Viewports & Edge Case Boundaries", () => {
       expect(hasBlowout).toBe(false);
     });
 
-    test(`no horizontal scroll blowout on AI case study (/work/rayai) at ${vp.label}`, async ({ page }) => {
+    test(`no horizontal scroll blowout on a case study (/work/passivae) at ${vp.label}`, async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto("/work/rayai");
+      await page.goto("/work/passivae");
       await page.waitForLoadState("domcontentloaded");
 
       const hasBlowout = await page.evaluate(() => {
@@ -451,27 +392,22 @@ test.describe("QAQC: Responsive Viewports & Edge Case Boundaries", () => {
     });
   }
 
-  test("workflow diagram cards stack cleanly without horizontal overflow at 360px", async ({ page }) => {
+  test("case study screens fit without horizontal overflow at 360px", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 });
-    await page.goto("/work/rayai");
+    await page.goto("/work/owwo");
     await page.waitForLoadState("domcontentloaded");
 
-    const workflowSection = page.locator("[data-od-id='case-workflow']");
-    await expect(workflowSection).toBeVisible();
-
-    // Check each step card fits inside viewport width
-    const stepCards = workflowSection.locator(".relative.flex.flex-col");
-    const count = await stepCards.count();
-    expect(count).toBe(4);
-
-    for (let i = 0; i < count; i++) {
-      const box = await stepCards.nth(i).boundingBox();
+    const shots = page.locator(".case-shot img");
+    await expect(shots).toHaveCount(3);
+    for (let i = 0; i < 3; i++) {
+      const box = await shots.nth(i).boundingBox();
       expect(box).not.toBeNull();
       if (box) {
         expect(box.x).toBeGreaterThanOrEqual(0);
         expect(box.x + box.width).toBeLessThanOrEqual(360 + 2);
       }
     }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(362);
   });
 
   test("non-existent work item id renders 404 gracefully", async ({ page }) => {

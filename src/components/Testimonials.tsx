@@ -18,7 +18,7 @@ import Ask from "./Ask";
  *      taken apart — outlines, class names, and the timeline that drives it,
  *      drawn from the hero's real cue times. The move is a WIPE under the
  *      reader's own hand: drag it, or use the arrow keys.
- *   2. Placeholder quotes, labelled as placeholders, so the slot exists.
+ *   2. What clients said, attributed to a role and a company.
  *   3. The working agreement: four promises, each underlined in ink as it
  *      arrives, and signed. The move is HANDWRITING.
  *
@@ -300,12 +300,11 @@ export default function Testimonials() {
         </ul>
       </div>
 
-      {/* 2 — the quote slots, labelled for what they are */}
+      {/* 2 — what clients said */}
       <div className="proof-quotes shell" data-od-id="proof-quotes">
         {PROOF_QUOTES.map((qt, i) => (
           <figure key={i} className="proof-quote">
-            {qt.placeholder && <span className="proof-quote-flag">Placeholder</span>}
-            <blockquote>{qt.quote}</blockquote>
+            <blockquote>&ldquo;{qt.quote}&rdquo;</blockquote>
             <figcaption>
               <b>{qt.name}</b>
               <span>{qt.role}</span>
@@ -318,7 +317,7 @@ export default function Testimonials() {
       <div className="pact shell" data-od-id="pact">
         <div className="pact-intro">
           <p className="eyebrow">The working agreement</p>
-          <h3 className="pact-heading">Until there are quotes, here is what I put in writing.</h3>
+          <h3 className="pact-heading">And here is what I put in writing before we start.</h3>
         </div>
 
         <ol className="pact-list">

@@ -5,18 +5,19 @@ import JsonLd from "@/components/JsonLd";
 import { breadcrumbLd } from "@/lib/site";
 import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
-import WorkflowDiagram from "@/components/WorkflowDiagram";
+import Icon from "@/components/Icons";
 import {
-  TESTIMONIALS,
   WORK_SEQUENCE,
   caseStudyPath,
   findProject,
   neighboursOf,
+  quoteForProject,
+  shotsOf,
 } from "@/lib/content";
 
 /**
- * A page per project, so the dolly's plates and its caption have somewhere real
- * to point.
+ * A page per project: what it is, what was built, the screens, and what the
+ * client said where they said something.
  */
 
 export function generateStaticParams() {
@@ -49,9 +50,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ id: 
   if (!project) notFound();
 
   const { prev, next } = neighboursOf(project.id);
-  const quote = project.testimonial
-    ? TESTIMONIALS.find((t) => t.id === project.testimonial)
-    : undefined;
+  const quote = quoteForProject(project.id);
 
   return (
     <>
@@ -89,64 +88,83 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ id: 
                   ))}
                 </div>
               )}
+
+              {project.liveUrl && (
+                <a
+                  href={project.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn--ghost mt-6 inline-flex min-h-[44px] items-center gap-2 px-5 text-[14px]"
+                >
+                  <span>Visit {new URL(project.liveUrl).hostname.replace(/^www\./, "")}</span>
+                  <Icon name="arrow" className="arrow-ic" />
+                </a>
+              )}
             </div>
           </header>
 
           <div className="shell">
-            <figure
-              className="case-plate"
-              /* The padding is viewport-relative, so the panel has to allow for
-                 it to end up exactly as wide as the screen it wraps. */
-              style={{ maxWidth: `calc(${project.w}px + 2 * clamp(16px, 2.2vw, 44px))` }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={project.img}
-                width={project.w}
-                height={project.h}
-                alt={`${project.name} — project screen`}
-                /* Capped at its own width: three of these sources are small
-                   logos, and blowing them up would only make them soft. */
-                style={{ maxWidth: project.w }}
-              />
-            </figure>
+            <div className="case-shots">
+              {shotsOf(project.id).map((s) => (
+                <figure key={s.device} className={`case-shot case-shot--${s.device.toLowerCase()}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={s.src}
+                    width={s.w}
+                    height={s.h}
+                    loading={s.device === "Desktop" ? "eager" : "lazy"}
+                    alt={`${project.name} on a ${s.device.toLowerCase()} screen`}
+                  />
+                  <figcaption>{s.device}</figcaption>
+                </figure>
+              ))}
+            </div>
+            {project.local && (
+              <p className="case-shots__note">
+                This project has no public address yet, so these screens are from a local build.
+              </p>
+            )}
           </div>
 
-          {/* Quantifiable ROI / Metrics Grid for AI & Impactful Projects */}
-          {project.metrics && project.metrics.length > 0 && (
-            <section className="shell rail py-[clamp(40px,5vw,72px)] border-t border-hairline">
-              <div>
-                <p className="eyebrow text-electric">Impact & Proof</p>
-                <p className="mt-2 text-[13px] leading-[1.5] text-brown max-w-[20ch]">
-                  Quantifiable performance gains and operational efficiencies delivered.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {project.metrics.map((m) => (
-                  <div
-                    key={m.label}
-                    className="rounded-xl border border-hairline bg-surface/90 p-5 shadow-xs"
-                  >
-                    <div className="font-display text-[clamp(28px,3vw,38px)] font-bold leading-none text-ink">
-                      {m.value}
-                    </div>
-                    <div className="mt-2 text-[13px] font-semibold text-ink">
-                      {m.label}
-                    </div>
-                    {m.detail && (
-                      <div className="mt-1 text-[12px] leading-[1.4] text-muted">
-                        {m.detail}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+          <section className="shell rail py-[clamp(40px,5vw,72px)]">
+            <div>
+              <p className="eyebrow">The project</p>
+            </div>
+            <div className="case-about">
+              {project.about.map((para) => (
+                <p key={para}>{para}</p>
+              ))}
+            </div>
+          </section>
 
-          {/* Workflow Architecture Pipeline */}
-          {project.workflow && (
-            <WorkflowDiagram workflow={project.workflow} />
+          <section className="shell rail pb-[clamp(40px,5vw,72px)]">
+            <div>
+              <p className="eyebrow">What I built</p>
+            </div>
+            <ul className="case-parts">
+              {project.built.map((b) => (
+                <li key={b.title} className="case-part">
+                  <h3>{b.title}</h3>
+                  <p>{b.copy}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {project.notes && project.notes.length > 0 && (
+            <section className="shell rail pb-[clamp(40px,5vw,72px)]">
+              <div>
+                <p className="eyebrow">What made it different</p>
+              </div>
+              <ul className="case-parts">
+                {project.notes.map((n) => (
+                  <li key={n.title} className="case-part">
+                    <h3>{n.title}</h3>
+                    <p>{n.copy}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
 
           {quote && (
@@ -157,8 +175,6 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ id: 
               <figure className="case-quote">
                 <blockquote>&ldquo;{quote.quote}&rdquo;</blockquote>
                 <figcaption>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={quote.face} alt="" width={44} height={44} />
                   <span>
                     <span className="case-quote__name">{quote.name}</span>
                     <span className="case-quote__role">{quote.role}</span>
