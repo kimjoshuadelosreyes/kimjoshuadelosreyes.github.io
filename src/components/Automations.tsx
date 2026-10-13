@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AUTOMATIONS, LIBRARY, SYSTEMS, automationPath, marksOf, noteOf, platformsAcross, workflowsOf } from "@/lib/automations";
+import { AUTOMATIONS, FEATURED, LIBRARY, automationPath, marksOf, noteOf, platformsAcross, workflowsOf } from "@/lib/automations";
 import AutomationShowcase from "./AutomationShowcase";
 import Ask from "./Ask";
 import Icon from "./Icons";
@@ -8,9 +8,9 @@ import Icon from "./Icons";
  * Automations — the library, on the home page.
  *
  * One flagship system at a time, its lead workflow walked through by the
- * camera, with the others a click away. The systems that ran in production
- * lead, each labelled as such, then the multi-agent AI reference systems. The
- * picker stops at eight so it stays one column; the rest are in the
+ * camera, with the others a click away. The picker shows the eight strongest
+ * systems, production builds and reference builds mixed, each labelled with
+ * which it is. Eight keeps it to one column; the rest are in the
  * catalogue. The counts under it are worked out
  * from the catalogue, and every one can be checked in the public repository.
  *
@@ -18,7 +18,7 @@ import Icon from "./Icons";
  * client only the graphs it draws.
  */
 export default function Automations() {
-  const systems = SYSTEMS.slice(0, 8).map((s) => {
+  const systems = FEATURED.map((s) => {
     const list = workflowsOf(s);
     const lead = list[0];
     return {

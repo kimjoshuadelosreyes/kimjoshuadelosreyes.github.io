@@ -84,6 +84,14 @@ export const noteOf = (list: Pick<Workflow, "source">[]) => (list.some(isProduct
 export const isAiSystem = (id: string) => id.startsWith("ai-");
 export const SYSTEMS = catalog.systems as System[];
 
+/**
+ * The systems the home page shows, strongest first: the large multi-agent
+ * canvases and the biggest of the builds that ran in production, mixed. Each
+ * is labelled with what it is. Everything else is in the catalogue.
+ */
+export const FEATURED_IDS = ["ai-sales-team", "newsletter-drafting", "ai-support-desk", "revenue-support-agents", "ai-content-studio", "social-intelligence", "ai-back-office", "community-provisioning"];
+export const FEATURED = FEATURED_IDS.map((id) => SYSTEMS.find((s) => s.id === id)).filter((s): s is System => !!s);
+
 export const LIBRARY = {
   repo: catalog.repo,
   n8n: catalog.tested.n8n,
@@ -163,7 +171,7 @@ export function neighboursOfPage(id: string) {
 export const AUTOMATIONS = {
   eyebrow: "The automations",
   titleLines: ["Built for the day", "something breaks."],
-  lede: `An open library of ${LIBRARY.workflows} n8n workflows on ${LIBRARY.platforms} named platforms. It opens with ${LIBRARY.production} that were built and run in production, rebuilt here so the logic can be read, and goes on to reference builds from single blocks to multi-agent AI systems of ${LIBRARY.largest} nodes. Each one is run against a real n8n and tested for what goes wrong: the webhook that arrives twice, the API that is down, the model that replies with nonsense.`,
+  lede: `An open library of ${LIBRARY.workflows} n8n workflows on ${LIBRARY.platforms} named platforms. ${LIBRARY.production} of them were built and run in production and are rebuilt here so the logic can be read; the rest are reference builds, from single blocks to multi-agent AI systems of ${LIBRARY.largest} nodes. Each one is run against a real n8n and tested for what goes wrong: the webhook that arrives twice, the API that is down, the model that replies with nonsense.`,
   aside: "Anyone can show the path where everything works. These show the other paths too.",
   note: SOURCE_NOTES.reference,
   facts: [

@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import catalog from "../src/lib/automations.generated.json";
+import { FEATURED_IDS } from "../src/lib/automations";
 
 /**
  * The automation library on the site: the home section, the catalogue, and the
@@ -18,8 +19,8 @@ const platforms = Object.entries(catalog.platforms)
   .map(([id, p]) => ({ id, ...p }))
   .filter((p) => p.workflows > 0);
 const nameOf = (id: string) => platforms.find((p) => p.id === id)!.name;
-/** The home page's picker shows the first eight systems. */
-const shown = catalog.systems.slice(0, 8);
+/** The home page's picker shows a chosen eight, strongest first. */
+const shown = FEATURED_IDS.map((id) => catalog.systems.find((s) => s.id === id)!);
 
 function watchForErrors(page: Page) {
   const errors: string[] = [];
@@ -45,7 +46,7 @@ test.describe("automations on the home page", () => {
   test("the graph renders the branch that suits the viewport", async ({ page, isMobile }) => {
     await page.goto("/");
     const graph = page.locator("#automations [data-od-id='automation-graph']");
-    const lead = workflows.find((w) => w.id === catalog.systems[0].workflows[0])!;
+    const lead = workflows.find((w) => w.id === shown[0].workflows[0])!;
     if (isMobile) {
       await expect(graph).toHaveClass(/auto--compact/);
       // The home page shows the first three steps and a way to the rest.
@@ -87,22 +88,20 @@ test.describe("automations on the home page", () => {
     else await expect(graph.locator(".auto-caption-no em").first()).toHaveText(lead.name);
   });
 
-  test("the systems that ran in production lead the picker, labelled as such", async ({ page, isMobile }) => {
+  test("the picker mixes production and reference systems, and each says which it is", async ({ page }) => {
     await page.goto("/");
-    const first = workflows.find((w) => w.id === shown[0].workflows[0])!;
-    expect(first.source).toBe("production");
-    // Every real system comes before the first reference one.
+    expect(shown).toHaveLength(8);
     const kinds = shown.map((s) => workflows.find((w) => w.id === s.workflows[0])!.source);
-    expect(kinds.lastIndexOf("production")).toBeLessThan(kinds.indexOf("reference"));
+    expect(kinds.filter((k) => k === "production").length).toBeGreaterThanOrEqual(3);
     const graph = page.locator("#automations [data-od-id='automation-graph']");
-    await expect(graph.getByText(REAL_NOTE).first()).toBeVisible();
-    // A reference system says what it is when it is chosen.
-    const reference = shown[kinds.indexOf("reference")];
-    const tab = page.locator("#automations .autos-tab", { hasText: reference.name });
-    await tab.scrollIntoViewIfNeeded();
-    await tab.click();
-    await expect(graph.getByText(REFERENCE_NOTE).first()).toBeVisible();
-    if (!isMobile) await expect(graph.getByText(REAL_NOTE)).toHaveCount(0);
+    for (const kind of ["reference", "production"]) {
+      const system = shown[kinds.indexOf(kind)];
+      const tab = page.locator("#automations .autos-tab", { hasText: system.name });
+      await tab.scrollIntoViewIfNeeded();
+      await tab.click();
+      await expect(tab).toHaveAttribute("aria-selected", "true");
+      await expect(graph.getByText(kind === "production" ? REAL_NOTE : REFERENCE_NOTE).first()).toBeVisible();
+    }
   });
 
   test("the nav reaches the section", async ({ page, isMobile }) => {
