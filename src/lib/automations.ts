@@ -31,8 +31,8 @@ export type Workflow = {
   category: string;
   kind: string | null;
   summary: string;
-  /** "reference": written for the library and run on test data. "client": a real, sanitised build. */
-  source: "reference" | "client";
+  /** "reference": written for the library. "production": rebuilt from a workflow that ran in production. Both run on test data. */
+  source: "reference" | "production";
   trigger: string;
   /** Ids of the platforms this workflow has a node for, in the order it reaches them. */
   platforms: string[];
@@ -70,6 +70,16 @@ export const marksOf = (ids: string[]): PlatformMark[] =>
 /** Every platform a set of workflows touches, in the catalogue's order. */
 export const platformsAcross = (list: Workflow[]): PlatformMark[] => marksOf(PLATFORMS.filter((p) => list.some((w) => w.platforms.includes(p.id))).map((p) => p.id));
 
+/** Rebuilt from a workflow that was built and run in production. */
+export const isProduction = (w: Pick<Workflow, "source">) => w.source === "production";
+
+/** How a build is labelled wherever it is shown. Never typed anywhere else. */
+export const SOURCE_NOTES = {
+  production: "Built and run in production · rebuilt here on test data",
+  reference: "Reference build · run on test data",
+} as const;
+export const noteOf = (list: Pick<Workflow, "source">[]) => (list.some(isProduction) ? SOURCE_NOTES.production : SOURCE_NOTES.reference);
+
 /** The four systems that are one large multi-agent canvas each. */
 export const isAiSystem = (id: string) => id.startsWith("ai-");
 export const SYSTEMS = catalog.systems as System[];
@@ -79,6 +89,7 @@ export const LIBRARY = {
   n8n: catalog.tested.n8n,
   workflows: WORKFLOWS.length,
   systems: SYSTEMS.length,
+  production: WORKFLOWS.filter(isProduction).length,
   platforms: PLATFORMS.length,
   largest: Math.max(...WORKFLOWS.map((w) => w.nodeCount)),
   behaviours: WORKFLOWS.reduce((n, w) => n + w.tests.length, 0),
@@ -86,12 +97,15 @@ export const LIBRARY = {
 
 export const TIER_LABELS: Record<Tier, string> = {
   flagship: "Flagship systems",
-  production: "Production workflows",
+  production: "Single-purpose workflows",
   block: "Building blocks",
 };
 
 export const TRIGGER_LABELS: Record<string, string> = {
   webhook: "Webhook",
+  formTrigger: "Form",
+  telegramTrigger: "Telegram message",
+  rssFeedReadTrigger: "RSS feed",
   scheduleTrigger: "Schedule",
   manualTrigger: "Manual run",
   executeWorkflowTrigger: "Called by a workflow",
@@ -125,7 +139,8 @@ export const fileUrl = (w: Pick<Workflow, "folder" | "id">) => `${LIBRARY.repo}/
 export type AutomationPage = { id: string; kind: "system" | "workflow"; name: string; line: string };
 export const AUTOMATION_PAGES: AutomationPage[] = [
   ...SYSTEMS.map((s): AutomationPage => ({ id: s.id, kind: "system", name: s.name, line: s.line })),
-  ...WORKFLOWS.filter((w) => w.tier === "production").map((w): AutomationPage => ({ id: w.id, kind: "workflow", name: w.name, line: w.summary })),
+  // Work that ran in production comes before the reference builds, here as everywhere.
+  ...[...WORKFLOWS.filter((w) => w.tier === "production" && isProduction(w)), ...WORKFLOWS.filter((w) => w.tier === "production" && !isProduction(w))].map((w): AutomationPage => ({ id: w.id, kind: "workflow", name: w.name, line: w.summary })),
 ];
 
 export const automationPath = (id: string) => `/automations/${id}`;
@@ -148,13 +163,13 @@ export function neighboursOfPage(id: string) {
 export const AUTOMATIONS = {
   eyebrow: "The automations",
   titleLines: ["Built for the day", "something breaks."],
-  lede: `An open library of ${LIBRARY.workflows} n8n workflows on ${LIBRARY.platforms} named platforms, from single building blocks to multi-agent AI systems of ${LIBRARY.largest} nodes. Each one is run against a real n8n and tested for what goes wrong: the webhook that arrives twice, the API that is down, the model that replies with nonsense.`,
+  lede: `An open library of ${LIBRARY.workflows} n8n workflows on ${LIBRARY.platforms} named platforms. It opens with ${LIBRARY.production} that were built and run in production, rebuilt here so the logic can be read, and goes on to reference builds from single blocks to multi-agent AI systems of ${LIBRARY.largest} nodes. Each one is run against a real n8n and tested for what goes wrong: the webhook that arrives twice, the API that is down, the model that replies with nonsense.`,
   aside: "Anyone can show the path where everything works. These show the other paths too.",
-  note: "Reference build · run on test data",
+  note: SOURCE_NOTES.reference,
   facts: [
+    { value: String(LIBRARY.production), label: "built and run in production" },
     { value: String(LIBRARY.workflows), label: "workflows, open source" },
     { value: String(LIBRARY.behaviours), label: "tested behaviours" },
     { value: String(LIBRARY.platforms), label: "platforms, each with its own node" },
-    { value: String(LIBRARY.systems), label: "complete systems" },
   ],
 } as const;

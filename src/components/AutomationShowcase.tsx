@@ -17,6 +17,8 @@ type ShownSystem = {
   behaviours: number;
   /** Every platform the system touches. */
   platforms: PlatformMark[];
+  /** How the build is labelled: from production, or a reference build. */
+  note: string;
   lead: { name: string; graph: Graph; story: StoryStep[]; platforms: PlatformMark[] };
 };
 
@@ -25,7 +27,7 @@ type ShownSystem = {
  * one's lead workflow playing in the frame, over the platforms it runs on. Choosing another system
  * swaps the graph for a fresh one, which plays from the start.
  */
-export default function AutomationShowcase({ systems, note }: { systems: ShownSystem[]; note: string }) {
+export default function AutomationShowcase({ systems }: { systems: ShownSystem[] }) {
   const [selected, setSelected] = useState(systems[0].id);
   const system = systems.find((s) => s.id === selected) ?? systems[0];
 
@@ -60,7 +62,7 @@ export default function AutomationShowcase({ systems, note }: { systems: ShownSy
           story={system.lead.story}
           platforms={system.lead.platforms}
           title={system.lead.name}
-          note={note}
+          note={system.note}
           compactLimit={3}
           more={
             <Link href={system.href} className="ask-cta">

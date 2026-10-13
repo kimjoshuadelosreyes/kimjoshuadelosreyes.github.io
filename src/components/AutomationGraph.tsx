@@ -46,7 +46,7 @@ const SEG = 1.6; // timeline seconds per step
 
 const KIND: Record<string, string> = {
   trigger: "Trigger", http: "API call", code: "Code", branch: "Decision", set: "Set fields", respond: "Response", loop: "Loop",
-  wait: "Wait", merge: "Merge", split: "Split", end: "End", fail: "Stop with error", call: "Sub-workflow", app: "App", agent: "AI agent", other: "Step",
+  wait: "Wait", filter: "Filter", merge: "Merge", split: "Split", end: "End", fail: "Stop with error", call: "Sub-workflow", app: "App", agent: "AI agent", other: "Step",
 };
 /** What a part is to its agent, from the kind of wire that joins them. */
 const PART: Record<string, string> = { languageModel: "Model", tool: "Tool", memory: "Memory", outputParser: "Answer shape", embedding: "Embeddings" };
@@ -87,6 +87,7 @@ function Glyph({ kind }: { kind: string }) {
         </>
       )}
       {kind === "fail" && <path d="M5.5 5.5l9 9M14.5 5.5l-9 9" {...common} />}
+      {kind === "filter" && <path d="M3.5 4.5h13l-5 6.2v5l-3 1.3v-6.3z" {...common} />}
       {kind === "agent" && (
         <>
           <rect x="4" y="6.5" width="12" height="9" rx="2.5" {...common} />
@@ -94,7 +95,7 @@ function Glyph({ kind }: { kind: string }) {
         </>
       )}
       {kind === "part" && <circle cx="10" cy="10" r="4.5" {...common} />}
-      {!["trigger", "http", "code", "branch", "call", "respond", "loop", "wait", "fail", "agent", "part"].includes(kind) && (
+      {!["trigger", "http", "code", "branch", "call", "respond", "loop", "wait", "fail", "filter", "agent", "part"].includes(kind) && (
         <rect x="4.5" y="4.5" width="11" height="11" rx="2.5" {...common} />
       )}
     </svg>

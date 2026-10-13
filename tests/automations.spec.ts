@@ -9,7 +9,11 @@ import catalog from "../src/lib/automations.generated.json";
 
 const workflows = catalog.workflows;
 const behaviours = workflows.reduce((n, w) => n + w.tests.length, 0);
-const production = workflows.filter((w) => w.tier === "production");
+/** Rebuilt from workflows that ran in production; everything else is a reference build. */
+const real = workflows.filter((w) => w.source === "production");
+const referenceSingles = workflows.filter((w) => w.tier === "production" && w.source !== "production");
+const REAL_NOTE = "Built and run in production · rebuilt here on test data";
+const REFERENCE_NOTE = "Reference build · run on test data";
 const platforms = Object.entries(catalog.platforms)
   .map(([id, p]) => ({ id, ...p }))
   .filter((p) => p.workflows > 0);
@@ -33,7 +37,7 @@ test.describe("automations on the home page", () => {
     const section = page.locator("#automations");
     await expect(section.locator("h2")).toContainText("something breaks");
     const facts = section.locator(".autos-fact dt");
-    await expect(facts).toHaveText([String(workflows.length), String(behaviours), String(platforms.length), String(catalog.systems.length)]);
+    await expect(facts).toHaveText([String(real.length), String(workflows.length), String(behaviours), String(platforms.length)]);
     await expect(section.locator(".autos-tab")).toHaveCount(shown.length);
     expect(errors).toEqual([]);
   });
@@ -83,6 +87,24 @@ test.describe("automations on the home page", () => {
     else await expect(graph.locator(".auto-caption-no em").first()).toHaveText(lead.name);
   });
 
+  test("the systems that ran in production lead the picker, labelled as such", async ({ page, isMobile }) => {
+    await page.goto("/");
+    const first = workflows.find((w) => w.id === shown[0].workflows[0])!;
+    expect(first.source).toBe("production");
+    // Every real system comes before the first reference one.
+    const kinds = shown.map((s) => workflows.find((w) => w.id === s.workflows[0])!.source);
+    expect(kinds.lastIndexOf("production")).toBeLessThan(kinds.indexOf("reference"));
+    const graph = page.locator("#automations [data-od-id='automation-graph']");
+    await expect(graph.getByText(REAL_NOTE).first()).toBeVisible();
+    // A reference system says what it is when it is chosen.
+    const reference = shown[kinds.indexOf("reference")];
+    const tab = page.locator("#automations .autos-tab", { hasText: reference.name });
+    await tab.scrollIntoViewIfNeeded();
+    await tab.click();
+    await expect(graph.getByText(REFERENCE_NOTE).first()).toBeVisible();
+    if (!isMobile) await expect(graph.getByText(REAL_NOTE)).toHaveCount(0);
+  });
+
   test("the nav reaches the section", async ({ page, isMobile }) => {
     test.skip(isMobile, "the desktop nav is hidden on a phone");
     await page.goto("/");
@@ -97,8 +119,8 @@ test.describe("the automation catalogue", () => {
     const rows = page.locator(".autos-row");
     await expect(rows).toHaveCount(workflows.length);
 
-    await page.getByRole("button", { name: /Production workflows/ }).click();
-    await expect(rows).toHaveCount(production.length);
+    await page.getByRole("button", { name: /Reference workflows/ }).click();
+    await expect(rows).toHaveCount(referenceSingles.length);
 
     await page.getByRole("button", { name: "Everything" }).click();
     await page.getByLabel("Search the workflows").fill("refund");
@@ -111,6 +133,20 @@ test.describe("the automation catalogue", () => {
     await page.getByRole("button", { name: "Reset filters" }).click();
     await expect(rows).toHaveCount(workflows.length);
     expect(errors).toEqual([]);
+  });
+
+  test("what was built in production is its own group, and comes first", async ({ page }) => {
+    await page.goto("/automations");
+    const groups = page.locator(".autos-group");
+    await expect(groups).toHaveText(["Built in production", "Reference systems", "Reference workflows", "Building blocks"]);
+    const firstGroup = page.locator("section[aria-label='Built in production'] .autos-row");
+    await expect(firstGroup).toHaveCount(real.length);
+    await page.getByRole("button", { name: /Built in production/ }).click();
+    await expect(page.locator(".autos-row")).toHaveCount(real.length);
+    // A real workflow names the platforms it ran on, the same way a reference one does.
+    const w = workflows.find((x) => x.id === "social-content-engine")!;
+    await expect(page.locator("[data-od-id='automation-row-social-content-engine'] .mark")).toHaveText(w.platforms.map(nameOf));
+    await expect(page.locator("[data-od-id='automation-row-social-content-engine'] a", { hasText: "Walkthrough" })).toHaveAttribute("href", "/automations/social-content-engine/");
   });
 
   test("narrows to the workflows on one platform, and every row names its platforms", async ({ page }) => {
@@ -163,7 +199,8 @@ test.describe("automation pages", () => {
       await expect(page.locator(".auto--scrub")).toHaveCount(1);
       await expect(page.locator(".auto--auto")).toHaveCount(system.workflows.length - 1);
     }
-    await expect(page.getByText("Reference build · run on test data").first()).toBeVisible();
+    await expect(page.getByText(REFERENCE_NOTE).first()).toBeVisible();
+    await expect(page.getByText(REAL_NOTE)).toHaveCount(0);
     expect(errors).toEqual([]);
   });
 
@@ -186,6 +223,35 @@ test.describe("automation pages", () => {
       await expect(frame.locator(".auto-band")).toHaveCount(w.graph.sections.length);
     }
     expect(errors).toEqual([]);
+  });
+
+  test("a system that ran in production says so, and shows its canvas in the original's sections", async ({ page, isMobile }) => {
+    const errors = watchForErrors(page);
+    const system = catalog.systems.find((s) => s.id === "newsletter-drafting")!;
+    const w = workflows.find((x) => x.id === system.workflows[0])!;
+    await page.goto("/automations/newsletter-drafting");
+    await expect(page.locator("h1")).toHaveText(system.name);
+    await expect(page.locator("header .eyebrow")).toHaveText("Built in production");
+    await expect(page.locator("header .rail-index")).toHaveText(REAL_NOTE);
+    await expect(page.getByText(REFERENCE_NOTE)).toHaveCount(0);
+    await expect(page.locator("[data-od-id='automation-runs-on'] .mark")).toHaveText(platforms.filter((p) => w.platforms.includes(p.id)).map((p) => p.name));
+    await expect(page.locator(".autos-sections li")).toHaveCount(w.graph.sections.length);
+    await expect(page.locator(".autos-steps li")).toHaveCount(w.story.length);
+    if (!isMobile) {
+      const frame = page.locator(".auto--scrub .auto-frame");
+      await expect(frame.locator(".auto-node")).toHaveCount(w.graph.nodes.length);
+      await expect(frame.locator(".auto-band")).toHaveCount(w.graph.sections.length);
+    }
+    expect(errors).toEqual([]);
+  });
+
+  test("a single workflow that ran in production has a page with the same label", async ({ page }) => {
+    await page.goto("/automations/unified-event-api");
+    const w = workflows.find((x) => x.id === "unified-event-api")!;
+    await expect(page.locator("h1")).toHaveText("Unified event API");
+    await expect(page.locator("header .rail-index")).toHaveText(REAL_NOTE);
+    await expect(page.locator(".autos-tests li")).toHaveCount(w.tests.length);
+    await expect(page.locator("a", { hasText: "Workflow source on GitHub" })).toHaveAttribute("href", /production\/operations\/unified-event-api\.json$/);
   });
 
   test("the scroll walks the lead workflow from its first step to the whole graph", async ({ page, isMobile }) => {

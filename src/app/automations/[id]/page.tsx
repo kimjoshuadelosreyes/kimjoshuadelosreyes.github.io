@@ -10,7 +10,6 @@ import AutomationGraph from "@/components/AutomationGraph";
 import PlatformMarks from "@/components/PlatformMarks";
 import { breadcrumbLd } from "@/lib/site";
 import {
-  AUTOMATIONS,
   AUTOMATION_PAGES,
   LIBRARY,
   TRIGGER_LABELS,
@@ -20,6 +19,8 @@ import {
   findSystem,
   findWorkflow,
   isAiSystem,
+  isProduction,
+  noteOf,
   marksOf,
   neighboursOfPage,
   platformsAcross,
@@ -123,6 +124,8 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
   const { prev, next } = neighboursOfPage(page.id);
   const behaviours = list.reduce((n, w) => n + w.tests.length, 0);
   const ai = !!system && isAiSystem(system.id);
+  const real = list.some(isProduction);
+  const note = noteOf(list);
 
   return (
     <>
@@ -141,8 +144,8 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
               <Link href="/automations" className="case-back">
                 <span aria-hidden="true">←</span> All automations
               </Link>
-              <p className="eyebrow mt-[20px]">{ai ? "Multi-agent AI system" : system ? "Flagship system" : lead.category}</p>
-              <p className="rail-index">{AUTOMATIONS.note}</p>
+              <p className="eyebrow mt-[20px]">{real ? "Built in production" : ai ? "Multi-agent AI system" : system ? "Flagship system" : lead.category}</p>
+              <p className="rail-index">{note}</p>
             </div>
             <div>
               <h1 className="h2">{system ? system.name : shortName(lead)}</h1>
@@ -193,22 +196,22 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
             story={lead.story}
             platforms={marksOf(lead.platforms)}
             title={lead.name}
-            note={AUTOMATIONS.note}
+            note={note}
           />
 
           <div className="shell">
             {list.map((w, i) => (
               <section key={w.id} id={w.id} className="autos-wf rail" data-od-id={`workflow-${w.id}`} style={i === 0 ? { borderTop: 0 } : undefined}>
                 <div>
-                  <p className="eyebrow">{system && list.length > 1 ? `Workflow ${i + 1} of ${list.length}` : ai ? "The canvas" : "The workflow"}</p>
+                  <p className="eyebrow">{system && list.length > 1 ? `Workflow ${i + 1} of ${list.length}` : system ? "The canvas" : "The workflow"}</p>
                 </div>
                 <div className="grid gap-[clamp(26px,3vw,44px)]">
                   <div>
                     <h2>{system ? shortName(w) : "How it runs"}</h2>
                     {system && <p className="lede mt-[14px]">{w.summary}</p>}
-                    {ai && w.graph.sections && (
+                    {system && (w.graph.sections?.length ?? 0) > 0 && (
                       <ol className="autos-sections">
-                        {w.graph.sections.map((sec) => (
+                        {(w.graph.sections ?? []).map((sec) => (
                           <li key={sec.title}>
                             <b>{sec.title}</b>
                             <span>{sec.nodes.length} nodes</span>
@@ -223,7 +226,7 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
                 </div>
                 {i > 0 && (
                   <div className="lg:col-span-2 -mx-[var(--gutter)] mt-[clamp(20px,2.4vw,36px)]">
-                    <AutomationGraph mode="auto" graph={w.graph} story={w.story} platforms={marksOf(w.platforms)} title={w.name} note={AUTOMATIONS.note} />
+                    <AutomationGraph mode="auto" graph={w.graph} story={w.story} platforms={marksOf(w.platforms)} title={w.name} note={note} />
                   </div>
                 )}
               </section>
