@@ -3461,10 +3461,44 @@
     border: 1px solid var(--color-hairline);
   }
   .auto-node-glyph svg { width: 19px; height: 19px; }
+  /* A platform's own mark, on white so every brand colour reads. */
+  .auto-node-glyph--mark { background: #fff; }
+  .auto-node-glyph--mark img { width: 22px; height: 22px; object-fit: contain; }
+  .auto-node--agent { box-shadow: 0 0 0 2px var(--color-electric), 0 10px 30px rgb(0 0 0 / 0.28); }
+  .auto-node--agent .auto-node-glyph:not(.auto-node-glyph--mark) { color: var(--color-inkfg); background: var(--color-electric); border-color: var(--color-electric); }
+  .auto-node--part { border-radius: 999px; padding-left: 9px; }
+  .auto-node--part .auto-node-glyph { border-radius: 50%; }
+  .auto-wire--part { stroke: color-mix(in oklab, var(--color-inkfg) 58%, transparent); stroke-width: 2; }
+  .auto-packet--part { fill: var(--color-inkfg); }
+  /* A titled section of a large canvas. The title is sized for the pulled-back
+     camera, where the whole canvas is a tenth of its drawn size. */
+  .auto-band {
+    position: absolute;
+    visibility: hidden;
+    border-radius: 60px;
+    border: 3px dashed color-mix(in oklab, var(--color-inkfg) 26%, transparent);
+    background: color-mix(in oklab, var(--color-inkfg) 5%, transparent);
+  }
+  .auto-band span {
+    position: absolute;
+    left: 48px;
+    top: 26px;
+    font-family: var(--font-display);
+    font-size: 104px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    color: color-mix(in oklab, var(--color-inkfg) 88%, transparent);
+  }
+  .auto-controls--many .auto-dot { width: 17px; }
+  .auto-controls--many .auto-dot::after { inset: 10px 4.5px; }
   .auto-node--trigger .auto-node-glyph { color: var(--color-inkfg); background: var(--color-electric); border-color: var(--color-electric); }
   .auto-node--branch .auto-node-glyph { color: var(--color-electric); }
   .auto-node--call .auto-node-glyph { color: var(--color-inkfg); background: var(--color-ink); border-color: var(--color-ink); }
   .auto-node--fail .auto-node-glyph { color: var(--color-crimson); }
+  /* A platform's mark keeps its white tile whatever kind of node it is on. */
+  .auto-node .auto-node-glyph.auto-node-glyph--mark { background: #fff; border-color: var(--color-hairline); }
   .auto-node-text { display: grid; min-width: 0; line-height: 1.2; }
   .auto-node-text b {
     overflow: hidden;
@@ -3643,6 +3677,57 @@
   .autos-row p { font-size: 14.5px; line-height: 1.55; color: var(--color-muted); }
   .autos-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .autos-tag { padding: 2px 9px; border-radius: 999px; border: 1px solid var(--color-hairline); background: var(--color-surface); font-size: 11.5px; font-weight: 500; color: var(--color-brown); white-space: nowrap; }
+  /* -- platform marks -- */
+  .marks { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 10px 4px 5px;
+    border-radius: 999px;
+    border: 1px solid var(--color-hairline);
+    background: var(--color-surface);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--color-ink);
+    white-space: nowrap;
+  }
+  .mark img { flex: none; width: 22px; height: 22px; padding: 3px; border-radius: 50%; background: #fff; object-fit: contain; }
+  .marks--bare { gap: 5px; }
+  .marks--bare .mark { padding: 3px; }
+  .autos-runs { display: grid; gap: 10px; padding: 18px var(--gutter) 0; }
+  @media (min-width: 1024px) { .autos-runs { padding-left: 0; } }
+  /* One scrolling row on a phone, where 29 platforms would be a screen of buttons. */
+  .autos-platforms { display: flex; gap: 6px; margin: 12px calc(var(--gutter) * -1) 0; padding: 2px var(--gutter); overflow-x: auto; scrollbar-width: none; }
+  .autos-platforms::-webkit-scrollbar { display: none; }
+  .autos-platform { flex: none; }
+  @media (min-width: 720px) { .autos-platforms { flex-wrap: wrap; margin-inline: 0; padding-inline: 0; overflow: visible; } }
+  .autos-platform {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 32px;
+    padding: 4px 11px 4px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--color-hairline);
+    background: var(--color-surface);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--color-ink);
+    cursor: pointer;
+    transition: border-color 0.2s var(--ease-nesh), color 0.2s var(--ease-nesh);
+  }
+  .autos-platform:first-child { padding-left: 12px; }
+  .autos-platform img { width: 22px; height: 22px; padding: 3px; border-radius: 50%; background: #fff; object-fit: contain; }
+  .autos-platform span { font-size: 11px; color: var(--color-muted); }
+  .autos-platform:hover { border-color: var(--color-electric); }
+  .autos-platform[aria-pressed="true"] { color: var(--color-electric); border-color: var(--color-electric); box-shadow: inset 0 0 0 1px var(--color-electric); }
+  .autos-sections { display: grid; gap: 0; margin: 22px 0 0; padding: 0; list-style: none; counter-reset: sec; }
+  .autos-sections li { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 10px 0; border-top: 1px solid var(--color-hairline); font-size: 14.5px; }
+  .autos-sections li b { font-weight: 500; }
+  .autos-sections li b::before { counter-increment: sec; content: counter(sec, decimal-leading-zero) "  "; color: var(--color-brown); font-variant-numeric: tabular-nums; white-space: pre; }
+  .autos-sections li span { flex: none; font-size: 13px; color: var(--color-muted); }
   .autos-tag--tier { color: var(--color-inkfg); background: var(--color-ink); border-color: var(--color-ink); }
   .autos-links { display: flex; gap: 16px; font-size: 13px; font-weight: 500; white-space: nowrap; }
   .autos-links a { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; color: var(--color-electric); }
@@ -3688,4 +3773,7 @@
   .auto--auto .auto-finale { right: clamp(300px, 34%, 420px); }
   .auto--auto .auto-finale-title { font-size: clamp(22px, 2.2vw, 36px); }
   .auto--auto .auto-captions .auto-caption { padding-right: clamp(280px, 32%, 400px); }
+  /* A long story has a longer row of dots to keep clear of. */
+  .auto--auto.auto--long .auto-captions .auto-caption { padding-right: clamp(440px, 48%, 540px); }
+  .auto--auto.auto--long .auto-finale { right: clamp(440px, 48%, 540px); }
 }

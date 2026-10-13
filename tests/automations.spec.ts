@@ -10,6 +10,12 @@ import catalog from "../src/lib/automations.generated.json";
 const workflows = catalog.workflows;
 const behaviours = workflows.reduce((n, w) => n + w.tests.length, 0);
 const production = workflows.filter((w) => w.tier === "production");
+const platforms = Object.entries(catalog.platforms)
+  .map(([id, p]) => ({ id, ...p }))
+  .filter((p) => p.workflows > 0);
+const nameOf = (id: string) => platforms.find((p) => p.id === id)!.name;
+/** The home page's picker shows the first eight systems. */
+const shown = catalog.systems.slice(0, 8);
 
 function watchForErrors(page: Page) {
   const errors: string[] = [];
@@ -27,8 +33,8 @@ test.describe("automations on the home page", () => {
     const section = page.locator("#automations");
     await expect(section.locator("h2")).toContainText("something breaks");
     const facts = section.locator(".autos-fact dt");
-    await expect(facts).toHaveText([String(workflows.length), String(behaviours), String(catalog.systems.length), catalog.tested.n8n]);
-    await expect(section.locator(".autos-tab")).toHaveCount(catalog.systems.length);
+    await expect(facts).toHaveText([String(workflows.length), String(behaviours), String(platforms.length), String(catalog.systems.length)]);
+    await expect(section.locator(".autos-tab")).toHaveCount(shown.length);
     expect(errors).toEqual([]);
   });
 
@@ -40,24 +46,41 @@ test.describe("automations on the home page", () => {
       await expect(graph).toHaveClass(/auto--compact/);
       // The home page shows the first three steps and a way to the rest.
       await expect(graph.locator(".auto-step")).toHaveCount(3);
-      await expect(graph.locator("a.ask-cta")).toHaveAttribute("href", /\/automations\/lead-intake/);
+      await expect(graph.locator("a.ask-cta")).toHaveAttribute("href", new RegExp(`/automations/${shown[0].id}`));
     } else {
       await expect(graph).toHaveClass(/auto--auto/);
       await expect(graph.locator(".auto-node")).toHaveCount(lead.graph.nodes.length);
       await expect(graph.locator(".auto-wire")).toHaveCount(lead.graph.edges.length);
       await expect(graph.locator(".auto-dot")).toHaveCount(lead.story.length + 1);
+      // Every node that is a platform's own wears that platform's mark.
+      await expect(graph.locator(".auto-node-glyph--mark")).toHaveCount(lead.graph.nodes.filter((n) => "platform" in n && n.platform).length);
+    }
+  });
+
+  test("the selected system names the platforms it runs on", async ({ page }) => {
+    await page.goto("/");
+    const system = shown[0];
+    const across = platforms.filter((p) => system.workflows.some((id) => workflows.find((w) => w.id === id)!.platforms.includes(p.id)));
+    const marks = page.locator("#automations .autos-runs .mark");
+    await expect(marks).toHaveText(across.map((p) => p.name));
+    // The marks load lazily, so bring them on screen before asking whether each one arrived.
+    await marks.first().scrollIntoViewIfNeeded();
+    for (const img of await marks.locator("img").all()) {
+      await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
     }
   });
 
   test("choosing another system swaps the workflow", async ({ page, isMobile }) => {
     await page.goto("/");
-    const tab = page.locator("#automations .autos-tab", { hasText: "Payments" });
+    const system = shown[shown.length - 1];
+    const lead = workflows.find((w) => w.id === system.workflows[0])!;
+    const tab = page.locator("#automations .autos-tab", { hasText: system.name });
     await tab.scrollIntoViewIfNeeded();
     await tab.click();
     await expect(tab).toHaveAttribute("aria-selected", "true");
     const graph = page.locator("#automations [data-od-id='automation-graph']");
-    if (isMobile) await expect(graph.locator(".auto-caption-title").first()).toHaveText("The processor reports an event");
-    else await expect(graph.locator(".auto-caption-no em").first()).toHaveText("Payments · Event ledger");
+    if (isMobile) await expect(graph.locator(".auto-caption-title").first()).toHaveText(lead.story[0].title);
+    else await expect(graph.locator(".auto-caption-no em").first()).toHaveText(lead.name);
   });
 
   test("the nav reaches the section", async ({ page, isMobile }) => {
@@ -79,7 +102,7 @@ test.describe("the automation catalogue", () => {
 
     await page.getByRole("button", { name: "Everything" }).click();
     await page.getByLabel("Search the workflows").fill("refund");
-    const refund = workflows.filter((w) => [w.name, w.summary, w.category, ...w.integrations].some((t) => t.toLowerCase().includes("refund")));
+    const refund = workflows.filter((w) => [w.name, w.summary, w.category, ...w.platforms.map(nameOf)].some((t) => t.toLowerCase().includes("refund")));
     await expect(rows).toHaveCount(refund.length);
     expect(refund.length).toBeGreaterThan(0);
 
@@ -88,6 +111,27 @@ test.describe("the automation catalogue", () => {
     await page.getByRole("button", { name: "Reset filters" }).click();
     await expect(rows).toHaveCount(workflows.length);
     expect(errors).toEqual([]);
+  });
+
+  test("narrows to the workflows on one platform, and every row names its platforms", async ({ page }) => {
+    await page.goto("/automations");
+    const rows = page.locator(".autos-row");
+    // One button per platform, and one for all of them.
+    await expect(page.locator("[data-od-id='automation-platforms'] button")).toHaveCount(platforms.length + 1);
+
+    const shopify = workflows.filter((w) => w.platforms.includes("shopify"));
+    expect(shopify.length).toBeGreaterThan(0);
+    const button = page.getByRole("group", { name: "Filter by platform" }).getByRole("button", { name: /Shopify/ });
+    await button.scrollIntoViewIfNeeded();
+    await button.click();
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+    await expect(rows).toHaveCount(shopify.length);
+    await button.click();
+    await expect(rows).toHaveCount(workflows.length);
+
+    const w = workflows.find((x) => x.id === "refund-approval")!;
+    await expect(page.locator("[data-od-id='automation-row-refund-approval'] .mark")).toHaveText(w.platforms.map(nameOf));
+    await expect(page.locator("[data-od-id='automation-row-block-dedupe']")).toContainText("Logic only");
   });
 
   test("every row links to its source, and to a walkthrough where one exists", async ({ page }) => {
@@ -120,6 +164,27 @@ test.describe("automation pages", () => {
       await expect(page.locator(".auto--auto")).toHaveCount(system.workflows.length - 1);
     }
     await expect(page.getByText("Reference build · run on test data").first()).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test("an AI system is one canvas: its agents, their parts and its sections", async ({ page, isMobile }) => {
+    const errors = watchForErrors(page);
+    const system = catalog.systems.find((s) => s.id === "ai-sales-team")!;
+    const w = workflows.find((x) => x.id === system.workflows[0])!;
+    expect(system.workflows).toHaveLength(1);
+    expect(w.nodeCount).toBeGreaterThanOrEqual(100);
+    await page.goto("/automations/ai-sales-team");
+    await expect(page.locator("h1")).toHaveText(system.name);
+    await expect(page.locator("[data-od-id='automation-runs-on'] .mark")).toHaveText(platforms.filter((p) => w.platforms.includes(p.id)).map((p) => p.name));
+    await expect(page.locator(".autos-sections li")).toHaveCount(w.graph.sections.length);
+    await expect(page.locator(".autos-steps li")).toHaveCount(w.story.length);
+    if (!isMobile) {
+      const frame = page.locator(".auto--scrub .auto-frame");
+      await expect(frame.locator(".auto-node")).toHaveCount(w.graph.nodes.length);
+      await expect(frame.locator(".auto-node--agent")).toHaveCount(w.graph.nodes.filter((n) => n.kind === "agent").length);
+      await expect(frame.locator(".auto-wire--part")).toHaveCount(w.graph.edges.filter((e) => "part" in e && e.part).length);
+      await expect(frame.locator(".auto-band")).toHaveCount(w.graph.sections.length);
+    }
     expect(errors).toEqual([]);
   });
 

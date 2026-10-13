@@ -12,9 +12,13 @@ import catalog from "./automations.generated.json";
  * component should be handed the few fields it draws.
  */
 
-export type GraphNode = { id: string; kind: string; service?: string; x: number; y: number };
-export type GraphEdge = { from: string; to: string; out: number };
-export type Graph = { nodes: GraphNode[]; edges: GraphEdge[] };
+/** `platform` is set on a node that is a platform's own n8n node. */
+export type GraphNode = { id: string; kind: string; platform?: string; x: number; y: number };
+/** `part` is set on the wire from a model, tool, memory or output shape up to the agent that uses it. */
+export type GraphEdge = { from: string; to: string; out: number; part?: string };
+/** A large canvas is laid out in titled sections. */
+export type GraphSection = { title: string; note?: string; nodes: string[] };
+export type Graph = { nodes: GraphNode[]; edges: GraphEdge[]; sections?: GraphSection[] };
 export type StoryStep = { title: string; copy: string; nodes: string[] };
 
 export type Tier = "flagship" | "production" | "block";
@@ -30,7 +34,8 @@ export type Workflow = {
   /** "reference": written for the library and run on test data. "client": a real, sanitised build. */
   source: "reference" | "client";
   trigger: string;
-  integrations: string[];
+  /** Ids of the platforms this workflow has a node for, in the order it reaches them. */
+  platforms: string[];
   calls: string[];
   folder: string;
   nodeCount: number;
@@ -49,7 +54,24 @@ export type System = {
   workflows: string[];
 };
 
+/** A platform as the site shows it: its name, what it is used for here, and its mark under /platforms. */
+export type Platform = { id: string; name: string; job: string; icon: string; workflows: number };
+export type PlatformMark = Pick<Platform, "id" | "name" | "icon">;
+
 export const WORKFLOWS = catalog.workflows as Workflow[];
+export const PLATFORMS: Platform[] = Object.entries(catalog.platforms as Record<string, Omit<Platform, "id">>)
+  .map(([id, p]) => ({ id, ...p }))
+  .filter((p) => p.workflows > 0);
+
+/** The marks for a list of platform ids, for handing to a client component. */
+export const marksOf = (ids: string[]): PlatformMark[] =>
+  ids.map((id) => PLATFORMS.find((p) => p.id === id)).filter((p): p is Platform => !!p).map(({ id, name, icon }) => ({ id, name, icon }));
+
+/** Every platform a set of workflows touches, in the catalogue's order. */
+export const platformsAcross = (list: Workflow[]): PlatformMark[] => marksOf(PLATFORMS.filter((p) => list.some((w) => w.platforms.includes(p.id))).map((p) => p.id));
+
+/** The four systems that are one large multi-agent canvas each. */
+export const isAiSystem = (id: string) => id.startsWith("ai-");
 export const SYSTEMS = catalog.systems as System[];
 
 export const LIBRARY = {
@@ -57,6 +79,8 @@ export const LIBRARY = {
   n8n: catalog.tested.n8n,
   workflows: WORKFLOWS.length,
   systems: SYSTEMS.length,
+  platforms: PLATFORMS.length,
+  largest: Math.max(...WORKFLOWS.map((w) => w.nodeCount)),
   behaviours: WORKFLOWS.reduce((n, w) => n + w.tests.length, 0),
 } as const;
 
@@ -72,6 +96,15 @@ export const TRIGGER_LABELS: Record<string, string> = {
   manualTrigger: "Manual run",
   executeWorkflowTrigger: "Called by a workflow",
   errorTrigger: "Any workflow failing",
+  typeformTrigger: "Typeform response",
+  stripeTrigger: "Stripe event",
+  shopifyTrigger: "Shopify event",
+  calendlyTrigger: "Calendly booking",
+  gmailTrigger: "Gmail message",
+  zendeskTrigger: "Zendesk ticket",
+  slackTrigger: "Slack message",
+  discordTrigger: "Discord event",
+  chatTrigger: "Chat message",
 };
 
 /** "Lead intake · Capture and qualify" is shown as "Capture and qualify" under its system. */
@@ -115,13 +148,13 @@ export function neighboursOfPage(id: string) {
 export const AUTOMATIONS = {
   eyebrow: "The automations",
   titleLines: ["Built for the day", "something breaks."],
-  lede: `An open library of ${LIBRARY.workflows} n8n workflows. Each one is run against a real n8n and tested for what goes wrong: the webhook that arrives twice, the API that is down, the model that replies with nonsense.`,
+  lede: `An open library of ${LIBRARY.workflows} n8n workflows on ${LIBRARY.platforms} named platforms, from single building blocks to multi-agent AI systems of ${LIBRARY.largest} nodes. Each one is run against a real n8n and tested for what goes wrong: the webhook that arrives twice, the API that is down, the model that replies with nonsense.`,
   aside: "Anyone can show the path where everything works. These show the other paths too.",
   note: "Reference build · run on test data",
   facts: [
     { value: String(LIBRARY.workflows), label: "workflows, open source" },
     { value: String(LIBRARY.behaviours), label: "tested behaviours" },
+    { value: String(LIBRARY.platforms), label: "platforms, each with its own node" },
     { value: String(LIBRARY.systems), label: "complete systems" },
-    { value: LIBRARY.n8n, label: "n8n version they last ran on" },
   ],
 } as const;

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
-import type { Graph, StoryStep } from "@/lib/automations";
+import type { Graph, PlatformMark, StoryStep } from "@/lib/automations";
 import SkipPin from "./SkipPin";
 
 /**
@@ -14,6 +14,11 @@ import SkipPin from "./SkipPin";
  * workflow's own story step by step. At each step the wires into it draw, a
  * packet travels each wire, and the step's nodes light up. Then the camera pulls
  * back to show the whole thing.
+ *
+ * A node that is a platform's own n8n node wears that platform's mark. An AI
+ * agent has its model, tools, memory and output shape hung beneath it on paler
+ * wires, as n8n draws them. A large canvas keeps the library's titled sections,
+ * which are named when the camera pulls back.
  *
  * ---------------------------------------------------------------------------
  * Same contract as the system flow: ONE timeline, every frame a pure function
@@ -39,17 +44,20 @@ const XS = 1.34; // the library's columns are 240 apart; this gives the wires ro
 const PAD = 80;
 const SEG = 1.6; // timeline seconds per step
 
-const SERVICE: Record<string, string> = {
-  llm: "AI model", db: "Datastore", crm: "CRM", chat: "Chat", email: "Email", calendar: "Calendar", helpdesk: "Helpdesk",
-  cms: "CMS", social: "Social", shop: "Store", payments: "Payments", discord: "Discord", search: "Search", storage: "Storage",
-  analytics: "Analytics", enrich: "Enrichment", sms: "SMS", supplier: "Supplier", hr: "HR", rates: "Exchange rates", backup: "Backups",
-};
 const KIND: Record<string, string> = {
-  trigger: "Trigger", http: "HTTP call", code: "Code", branch: "Decision", set: "Set fields", respond: "Response", loop: "Loop",
-  wait: "Wait", merge: "Merge", split: "Split", end: "End", fail: "Stop with error", call: "Sub-workflow", other: "Step",
+  trigger: "Trigger", http: "API call", code: "Code", branch: "Decision", set: "Set fields", respond: "Response", loop: "Loop",
+  wait: "Wait", merge: "Merge", split: "Split", end: "End", fail: "Stop with error", call: "Sub-workflow", app: "App", agent: "AI agent", other: "Step",
 };
+/** What a part is to its agent, from the kind of wire that joins them. */
+const PART: Record<string, string> = { languageModel: "Model", tool: "Tool", memory: "Memory", outputParser: "Answer shape", embedding: "Embeddings" };
 
-const sublabel = (n: { kind: string; service?: string }) => (n.service && SERVICE[n.service]) || KIND[n.kind] || "Step";
+type Named = { kind: string; platform?: string; role?: string };
+const sublabel = (n: Named, names: Map<string, string>) => {
+  const what = n.kind === "part" ? (n.role && PART[n.role]) || "Part" : KIND[n.kind] || "Step";
+  const who = n.platform && names.get(n.platform);
+  if (!who) return what;
+  return n.kind === "app" || n.kind === "http" ? who : `${who} · ${what}`;
+};
 
 function Glyph({ kind }: { kind: string }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -79,15 +87,33 @@ function Glyph({ kind }: { kind: string }) {
         </>
       )}
       {kind === "fail" && <path d="M5.5 5.5l9 9M14.5 5.5l-9 9" {...common} />}
-      {!["trigger", "http", "code", "branch", "call", "respond", "loop", "wait", "fail"].includes(kind) && (
+      {kind === "agent" && (
+        <>
+          <rect x="4" y="6.5" width="12" height="9" rx="2.5" {...common} />
+          <path d="M10 6.5V3.5M7.8 10.5v1.2M12.2 10.5v1.2" {...common} />
+        </>
+      )}
+      {kind === "part" && <circle cx="10" cy="10" r="4.5" {...common} />}
+      {!["trigger", "http", "code", "branch", "call", "respond", "loop", "wait", "fail", "agent", "part"].includes(kind) && (
         <rect x="4.5" y="4.5" width="11" height="11" rx="2.5" {...common} />
       )}
     </svg>
   );
 }
 
-type Placed = { id: string; kind: string; service?: string; left: number; top: number; step: number };
-type Wire = { key: string; d: string; fail: boolean; label: string | null; lx: number; ly: number; step: number };
+/** A platform's mark where the node is that platform's, the kind's glyph otherwise. */
+function Mark({ node, icons }: { node: Named; icons: Map<string, string> }) {
+  const icon = node.platform && icons.get(node.platform);
+  return (
+    <span className={`auto-node-glyph${icon ? " auto-node-glyph--mark" : ""}`}>
+      {icon ? <img src={`/platforms/${icon}`} alt="" width={22} height={22} decoding="async" /> : <Glyph kind={node.kind} />}
+    </span>
+  );
+}
+
+type Placed = { id: string; kind: string; platform?: string; role?: string; left: number; top: number; step: number };
+type Wire = { key: string; d: string; fail: boolean; part: boolean; label: string | null; lx: number; ly: number; step: number };
+type Band = { title: string; left: number; top: number; width: number; height: number };
 
 /** World coordinates for every node and wire, and which step first shows each. */
 function useLayout(graph: Graph, story: StoryStep[]) {
@@ -101,7 +127,8 @@ function useLayout(graph: Graph, story: StoryStep[]) {
     const nodes: Placed[] = graph.nodes.map((n) => ({
       id: n.id,
       kind: n.kind,
-      service: n.service,
+      platform: n.platform,
+      role: graph.edges.find((e) => e.part && e.from === n.id)?.part,
       left: (n.x - minX) * XS + PAD,
       top: n.y - minY + PAD,
       step: stepOf(n.id),
@@ -114,16 +141,32 @@ function useLayout(graph: Graph, story: StoryStep[]) {
        the order of where the wires are going, so two wires out of one node
        never cross on their way out. */
     const port = new Map<number, number>();
-    for (const id of new Set(graph.edges.map((e) => e.from))) {
-      const leaving = graph.edges.map((e, i) => ({ e, i })).filter((x) => x.e.from === id);
+    for (const id of new Set(graph.edges.filter((e) => !e.part).map((e) => e.from))) {
+      const leaving = graph.edges.map((e, i) => ({ e, i })).filter((x) => x.e.from === id && !x.e.part);
       leaving.sort((p, q) => at.get(p.e.to)!.top - at.get(q.e.to)!.top || p.e.out - q.e.out);
       leaving.forEach((x, slot) => port.set(x.i, (slot - (leaving.length - 1) / 2) * 15));
+    }
+    /* An agent's parts hang beneath it. Their wires land along its bottom edge
+       in the order the parts stand, so they fan out without crossing. */
+    const socket = new Map<number, number>();
+    for (const id of new Set(graph.edges.filter((e) => e.part).map((e) => e.to))) {
+      const hung = graph.edges.map((e, i) => ({ e, i })).filter((x) => x.e.part && x.e.to === id);
+      hung.sort((p, q) => at.get(p.e.from)!.left - at.get(q.e.from)!.left);
+      hung.forEach((x, slot) => socket.set(x.i, (NW * (slot + 1)) / (hung.length + 1)));
     }
 
     const wires: Wire[] = graph.edges.map((e, i) => {
       const a = at.get(e.from)!;
       const b = at.get(e.to)!;
       const k = outs.get(e.from) ?? 1;
+      if (e.part) {
+        const px = a.left + NW / 2;
+        const py = a.top;
+        const ax = b.left + (socket.get(i) ?? NW / 2);
+        const ay = b.top + NH;
+        const mid = (py + ay) / 2;
+        return { key: `${e.from}>${e.to}>part>${i}`, d: `M${px} ${py} C${px} ${mid} ${ax} ${mid} ${ax} ${ay}`, fail: false, part: true, label: null, lx: px, ly: py, step: Math.max(a.step, b.step) };
+      }
       const sx = a.left + NW;
       const sy = a.top + NH / 2 + (port.get(i) ?? 0);
       const tx = b.left;
@@ -142,7 +185,7 @@ function useLayout(graph: Graph, story: StoryStep[]) {
           : a.kind === "branch" && k === 2 && a.id.endsWith("?")
             ? e.out === 0 ? "yes" : "no"
             : null;
-      return { key: `${e.from}>${e.to}>${e.out}>${i}`, d, fail, label, lx: sx + 12, ly: sy + ((port.get(i) ?? 0) <= 0 ? -7 : 15), step: Math.max(a.step, b.step) };
+      return { key: `${e.from}>${e.to}>${e.out}>${i}`, d, fail, part: false, label, lx: sx + 12, ly: sy + ((port.get(i) ?? 0) <= 0 ? -7 : 15), step: Math.max(a.step, b.step) };
     });
 
     const width = Math.max(...nodes.map((n) => n.left)) + NW + PAD;
@@ -155,13 +198,22 @@ function useLayout(graph: Graph, story: StoryStep[]) {
       return { cx: (l + r) / 2, cy: (t + b) / 2, w: r - l, h: b - t };
     };
     const boxes = story.map((_, i) => box(nodes.filter((n) => n.step === i)));
-    return { nodes, wires, width, height, boxes, whole: box(nodes) };
+    const sections = graph.sections ?? [];
+    const bands: Band[] =
+      sections.length > 1
+        ? sections.map((sec) => {
+            const b = box(nodes.filter((n) => sec.nodes.includes(n.id)));
+            return { title: sec.title, left: b.cx - b.w / 2 - 50, top: b.cy - b.h / 2 - 150, width: b.w + 100, height: b.h + 200 };
+          })
+        : [];
+    return { nodes, wires, width, height, boxes, bands, whole: box(nodes) };
   }, [graph, story]);
 }
 
 export default function AutomationGraph({
   graph,
   story,
+  platforms,
   mode,
   title,
   note,
@@ -170,6 +222,8 @@ export default function AutomationGraph({
 }: {
   graph: Graph;
   story: StoryStep[];
+  /** The marks of the platforms this graph has nodes for. */
+  platforms: PlatformMark[];
   mode: "scrub" | "auto";
   /** Named in the frame's corner and to assistive tech. */
   title: string;
@@ -185,6 +239,10 @@ export default function AutomationGraph({
   const [layoutKey, setLayoutKey] = useState(0);
   const [step, setStep] = useState(0);
   const layout = useLayout(graph, story);
+  const icons = useMemo(() => new Map(platforms.map((p) => [p.id, p.icon])), [platforms]);
+  const names = useMemo(() => new Map(platforms.map((p) => [p.id, p.name])), [platforms]);
+  /* A long story gets a shorter stretch of scroll per step, so the pin never runs to a dozen screens. */
+  const perStep = Math.min(55, Math.round(640 / (story.length + 1)));
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px), (prefers-reduced-motion: reduce)");
@@ -239,7 +297,18 @@ export default function AutomationGraph({
         return { x: fw / 2 - scale * b.cx, y: focusY - scale * b.cy, scale };
       };
       const stops = layout.boxes.map((b) => cam(b, 0.86, 0.46, 0.42));
-      const wide = cam(layout.whole, 0.94, 0.56, 0.05);
+      let wide = cam(layout.whole, 0.94, 0.56, 0.05);
+      if (layout.bands.length) {
+        /* A sectioned canvas is framed by its bands, between the frame's label
+           above and the closing line below. */
+        const l = Math.min(...layout.bands.map((b) => b.left));
+        const t = Math.min(...layout.bands.map((b) => b.top));
+        const r = Math.max(...layout.bands.map((b) => b.left + b.width));
+        const btm = Math.max(...layout.bands.map((b) => b.top + b.height));
+        const room = fh - 76 - 150;
+        const scale = Math.min(1, (fw * 0.94) / (r - l), room / (btm - t));
+        wide = { x: fw / 2 - (scale * (l + r)) / 2, y: 76 + (room - scale * (btm - t)) / 2 - scale * t, scale };
+      }
 
       const captions = q(".auto-caption") as HTMLElement[];
       const nodeEls = q(".auto-node") as HTMLElement[];
@@ -300,6 +369,8 @@ export default function AutomationGraph({
         .fromTo(world, stops[n - 1], { ...wide, duration: 1, ease: "power3.inOut", immediateRender: false }, pull)
         .fromTo(captions[n - 1], { autoAlpha: 1, y: 0 }, { autoAlpha: 0, y: -12, duration: 0.25, ease: "power1.in", immediateRender: false }, pull)
         .fromTo(q(".auto-finale"), { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.5 }, pull + 0.6);
+      const bandEls = q(".auto-band");
+      if (bandEls.length) tl.fromTo(bandEls, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5, stagger: 0.08 }, pull + 0.5);
       light(n, pull + 0.3);
       tl.call(() => setStep(n), undefined, pull + 0.02).to({}, { duration: 0.01 }, END);
 
@@ -347,12 +418,10 @@ export default function AutomationGraph({
                 .sort((a, b) => a.left - b.left || a.top - b.top)
                 .map((nd) => (
                   <li key={nd.id} className={`auto-node auto-node--${nd.kind}`}>
-                    <span className="auto-node-glyph">
-                      <Glyph kind={nd.kind} />
-                    </span>
+                    <Mark node={nd} icons={icons} />
                     <span className="auto-node-text">
                       <b>{nd.id}</b>
-                      <i>{sublabel(nd)}</i>
+                      <i>{sublabel(nd, names)}</i>
                     </span>
                   </li>
                 ))}
@@ -373,9 +442,14 @@ export default function AutomationGraph({
         <div className="auto-grid" aria-hidden="true" />
 
         <div className="auto-world" style={{ width: layout.width, height: layout.height }} aria-hidden="true">
+          {layout.bands.map((b) => (
+            <div key={b.title} className="auto-band" style={{ left: b.left, top: b.top, width: b.width, height: b.height }}>
+              <span>{b.title}</span>
+            </div>
+          ))}
           <svg className="auto-wires" width={layout.width} height={layout.height} viewBox={`0 0 ${layout.width} ${layout.height}`}>
             {layout.wires.map((w) => (
-              <path key={w.key} className={`auto-wire${w.fail ? " auto-wire--fail" : ""}`} d={w.d} />
+              <path key={w.key} className={`auto-wire${w.fail ? " auto-wire--fail" : ""}${w.part ? " auto-wire--part" : ""}`} d={w.d} />
             ))}
             {layout.wires.map((w) => (
               <text key={w.key} className={`auto-wire-label${w.fail ? " auto-wire-label--fail" : ""}`} x={w.lx} y={w.ly}>
@@ -383,18 +457,16 @@ export default function AutomationGraph({
               </text>
             ))}
             {layout.wires.map((w) => (
-              <circle key={w.key} className={`auto-packet${w.fail ? " auto-packet--fail" : ""}`} r="6" />
+              <circle key={w.key} className={`auto-packet${w.fail ? " auto-packet--fail" : ""}${w.part ? " auto-packet--part" : ""}`} r={w.part ? 4 : 6} />
             ))}
           </svg>
           {layout.nodes.map((nd) => (
             <div key={nd.id} className={`auto-node auto-node--${nd.kind}`} style={{ left: nd.left, top: nd.top, width: NW, height: NH }}>
               <span className="auto-node-ring" />
-              <span className="auto-node-glyph">
-                <Glyph kind={nd.kind} />
-              </span>
+              <Mark node={nd} icons={icons} />
               <span className="auto-node-text">
                 <b>{nd.id}</b>
-                <i>{sublabel(nd)}</i>
+                <i>{sublabel(nd, names)}</i>
               </span>
             </div>
           ))}
@@ -433,7 +505,7 @@ export default function AutomationGraph({
         {mode === "scrub" ? (
           <SkipPin runway=".auto-run" className="pin-skip--onDark" />
         ) : (
-          <div className="auto-controls">
+          <div className={`auto-controls${story.length > 9 ? " auto-controls--many" : ""}`}>
             {story.map((s, i) => (
               <button key={s.title} type="button" className="auto-dot" aria-current={step === i ? "step" : undefined} aria-label={`Step ${i + 1}: ${s.title}`} onClick={() => goTo(i)} />
             ))}
@@ -448,9 +520,9 @@ export default function AutomationGraph({
   );
 
   return (
-    <div ref={root} className={`auto auto--${mode}`} data-od-id="automation-graph">
+    <div ref={root} className={`auto auto--${mode}${story.length > 9 ? " auto--long" : ""}`} data-od-id="automation-graph">
       {mode === "scrub" ? (
-        <div className="auto-run" style={{ minHeight: `${100 + (story.length + 1) * 55}svh` }}>
+        <div className="auto-run" style={{ minHeight: `${100 + (story.length + 1) * perStep}svh` }}>
           {stage}
         </div>
       ) : (

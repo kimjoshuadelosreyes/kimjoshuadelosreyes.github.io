@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AUTOMATIONS, LIBRARY, SYSTEMS, automationPath, workflowsOf } from "@/lib/automations";
+import { AUTOMATIONS, LIBRARY, SYSTEMS, automationPath, marksOf, platformsAcross, workflowsOf } from "@/lib/automations";
 import AutomationShowcase from "./AutomationShowcase";
 import Ask from "./Ask";
 import Icon from "./Icons";
@@ -8,14 +8,16 @@ import Icon from "./Icons";
  * Automations — the library, on the home page.
  *
  * One flagship system at a time, its lead workflow walked through by the
- * camera, with the others a click away. The counts under it are worked out
+ * camera, with the others a click away. The four multi-agent AI systems lead,
+ * and the picker stops at eight so it stays one column; the rest are in the
+ * catalogue. The counts under it are worked out
  * from the catalogue, and every one can be checked in the public repository.
  *
  * This is a server component: it reads the whole catalogue and hands the
- * client only the eight graphs it draws.
+ * client only the graphs it draws.
  */
 export default function Automations() {
-  const systems = SYSTEMS.map((s) => {
+  const systems = SYSTEMS.slice(0, 8).map((s) => {
     const list = workflowsOf(s);
     const lead = list[0];
     return {
@@ -23,9 +25,10 @@ export default function Automations() {
       name: s.name,
       line: s.line,
       href: automationPath(s.id),
-      workflows: list.length,
+      size: list.length === 1 ? `${lead.nodeCount} nodes on one canvas` : `${list.length} workflows`,
       behaviours: list.reduce((n, w) => n + w.tests.length, 0),
-      lead: { name: lead.name, graph: lead.graph, story: lead.story },
+      platforms: platformsAcross(list),
+      lead: { name: lead.name, graph: lead.graph, story: lead.story, platforms: marksOf(lead.platforms) },
     };
   });
 
@@ -36,7 +39,7 @@ export default function Automations() {
           <div className="mb-[14px] font-display text-[13px] tracking-[0.06em] text-brown">03</div>
           <p className="eyebrow">{AUTOMATIONS.eyebrow}</p>
           <p className="rail-index">
-            {LIBRARY.workflows} workflows · {LIBRARY.behaviours} tested behaviours
+            {LIBRARY.workflows} workflows · {LIBRARY.platforms} platforms
           </p>
           <p className="mt-[22px] max-w-[22ch] text-[13px] leading-[1.55] text-brown">{AUTOMATIONS.aside}</p>
         </div>

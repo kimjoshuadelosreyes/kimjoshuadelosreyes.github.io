@@ -7,6 +7,7 @@ import SiteFooter from "@/components/SiteFooter";
 import Icon from "@/components/Icons";
 import Ask from "@/components/Ask";
 import AutomationGraph from "@/components/AutomationGraph";
+import PlatformMarks from "@/components/PlatformMarks";
 import { breadcrumbLd } from "@/lib/site";
 import {
   AUTOMATIONS,
@@ -18,7 +19,10 @@ import {
   fileUrl,
   findSystem,
   findWorkflow,
+  isAiSystem,
+  marksOf,
   neighboursOfPage,
+  platformsAcross,
   shortName,
   sourceUrl,
   workflowsOf,
@@ -28,7 +32,8 @@ import {
  * A page per flagship system, and a page per production workflow.
  *
  * A system page walks through its lead workflow with the scroll, then shows
- * each of the others playing on its own. Everything on it comes from the
+ * each of the others playing on its own. An AI system is one canvas, so its
+ * page is that canvas walked through section by section. Everything on it comes from the
  * library's catalogue: the steps, the diagram and the list of tested
  * behaviours are the library's own.
  */
@@ -55,13 +60,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 function Facts({ w }: { w: Workflow }) {
-  const talks = w.integrations.filter((i) => !["Webhook", "Schedule"].includes(i));
   return (
     <dl className="autos-facts-list">
       <dt>Starts from</dt>
       <dd>{TRIGGER_LABELS[w.trigger] ?? w.trigger}</dd>
-      <dt>Talks to</dt>
-      <dd>{talks.length ? talks.join(", ") : "Nothing outside n8n"}</dd>
+      <dt>Platforms</dt>
+      <dd>{w.platforms.length ? <PlatformMarks marks={marksOf(w.platforms)} label={`Platforms ${w.name} connects to`} /> : "None: logic only"}</dd>
       {w.calls.length > 0 && (
         <>
           <dt>Leans on</dt>
@@ -118,6 +122,7 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
   const lead = list[0];
   const { prev, next } = neighboursOfPage(page.id);
   const behaviours = list.reduce((n, w) => n + w.tests.length, 0);
+  const ai = !!system && isAiSystem(system.id);
 
   return (
     <>
@@ -136,7 +141,7 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
               <Link href="/automations" className="case-back">
                 <span aria-hidden="true">←</span> All automations
               </Link>
-              <p className="eyebrow mt-[20px]">{system ? "Flagship system" : lead.category}</p>
+              <p className="eyebrow mt-[20px]">{ai ? "Multi-agent AI system" : system ? "Flagship system" : lead.category}</p>
               <p className="rail-index">{AUTOMATIONS.note}</p>
             </div>
             <div>
@@ -148,12 +153,19 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
                   <Icon name="arrow" className="arrow-ic" />
                 </a>
                 <span className="text-[13.5px] text-muted">
-                  {list.length > 1 ? `${list.length} workflows · ` : ""}
+                  {list.length > 1 ? `${list.length} workflows · ` : `${lead.nodeCount} nodes · `}
                   {behaviours} tested behaviours · n8n {LIBRARY.n8n}
                 </span>
               </div>
             </div>
           </header>
+
+          <section className="shell rail pb-[clamp(30px,3.6vw,54px)]" data-od-id="automation-runs-on">
+            <div>
+              <p className="eyebrow">Runs on</p>
+            </div>
+            <PlatformMarks marks={platformsAcross(list)} label={`Platforms ${page.name} runs on`} />
+          </section>
 
           {system && (
             <section className="shell rail pb-[clamp(36px,4.6vw,70px)]">
@@ -179,6 +191,7 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
             mode={system ? "scrub" : "auto"}
             graph={lead.graph}
             story={lead.story}
+            platforms={marksOf(lead.platforms)}
             title={lead.name}
             note={AUTOMATIONS.note}
           />
@@ -187,12 +200,22 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
             {list.map((w, i) => (
               <section key={w.id} id={w.id} className="autos-wf rail" data-od-id={`workflow-${w.id}`} style={i === 0 ? { borderTop: 0 } : undefined}>
                 <div>
-                  <p className="eyebrow">{system ? `Workflow ${i + 1} of ${list.length}` : "The workflow"}</p>
+                  <p className="eyebrow">{system && list.length > 1 ? `Workflow ${i + 1} of ${list.length}` : ai ? "The canvas" : "The workflow"}</p>
                 </div>
                 <div className="grid gap-[clamp(26px,3vw,44px)]">
                   <div>
                     <h2>{system ? shortName(w) : "How it runs"}</h2>
                     {system && <p className="lede mt-[14px]">{w.summary}</p>}
+                    {ai && w.graph.sections && (
+                      <ol className="autos-sections">
+                        {w.graph.sections.map((sec) => (
+                          <li key={sec.title}>
+                            <b>{sec.title}</b>
+                            <span>{sec.nodes.length} nodes</span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
                   </div>
                   <Facts w={w} />
                   <Steps w={w} />
@@ -200,7 +223,7 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
                 </div>
                 {i > 0 && (
                   <div className="lg:col-span-2 -mx-[var(--gutter)] mt-[clamp(20px,2.4vw,36px)]">
-                    <AutomationGraph mode="auto" graph={w.graph} story={w.story} title={w.name} note={AUTOMATIONS.note} />
+                    <AutomationGraph mode="auto" graph={w.graph} story={w.story} platforms={marksOf(w.platforms)} title={w.name} note={AUTOMATIONS.note} />
                   </div>
                 )}
               </section>

@@ -7,13 +7,13 @@ import Icon from "@/components/Icons";
 import Ask from "@/components/Ask";
 import AutomationCatalogue, { type CatalogueRow } from "@/components/AutomationCatalogue";
 import { breadcrumbLd } from "@/lib/site";
-import { AUTOMATIONS, LIBRARY, TRIGGER_LABELS, WORKFLOWS, fileUrl, pageOf } from "@/lib/automations";
+import { AUTOMATIONS, LIBRARY, PLATFORMS, TRIGGER_LABELS, WORKFLOWS, fileUrl, marksOf, pageOf } from "@/lib/automations";
 
 /**
  * The automation library: every workflow, searchable.
  */
 
-const description = `${LIBRARY.workflows} open-source n8n workflows: ${LIBRARY.systems} complete systems, production workflows and building blocks, each run and tested against a real n8n.`;
+const description = `${LIBRARY.workflows} open-source n8n workflows on ${LIBRARY.platforms} named platforms: ${LIBRARY.systems} complete systems, production workflows and building blocks, each run and tested against a real n8n.`;
 
 export const metadata: Metadata = {
   title: "Automation library",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 const TIERS = [
-  { id: "flagship", label: "Flagship systems", note: "Several workflows that together run one part of a business. Each has a step-by-step walkthrough." },
+  { id: "flagship", label: "Flagship systems", note: "Each runs one part of a business: four multi-agent AI systems built as one large canvas each, and eight systems of several workflows. Each has a step-by-step walkthrough." },
   { id: "production", label: "Production workflows", note: "One job each, hardened the same way. Each has a walkthrough." },
   { id: "block", label: "Building blocks", note: "One idea each, meant to be called from another workflow or copied into one. These link straight to their source." },
 ];
@@ -36,7 +36,8 @@ export default function AutomationsPage() {
     category: w.category,
     summary: w.summary,
     trigger: TRIGGER_LABELS[w.trigger] ?? w.trigger,
-    integrations: w.integrations.filter((i) => !["Webhook", "Schedule"].includes(i)),
+    platforms: marksOf(w.platforms),
+    nodes: w.nodeCount,
     behaviours: w.tests.length,
     href: pageOf(w),
     source: fileUrl(w),
@@ -62,8 +63,9 @@ export default function AutomationsPage() {
               {LIBRARY.behaviours} tested behaviours.
             </h1>
             <p className="lede mt-[clamp(16px,2vw,26px)]">
-              Every workflow here is open source, written as code, and run against n8n {LIBRARY.n8n} with its outside
-              services mocked. The tests cover what goes wrong as well as what goes right.
+              Every workflow here is open source, written as code, and built from each platform&rsquo;s own n8n node.
+              Each is run against n8n {LIBRARY.n8n} with a stand-in answering for every platform, and the tests cover
+              what goes wrong as well as what goes right.
             </p>
             <p className="mt-4 max-w-[62ch] text-[14.5px] leading-[1.6] text-muted">
               These are reference builds: written for this library and run on test data. They are not copies of any
@@ -82,7 +84,7 @@ export default function AutomationsPage() {
         </header>
 
         <section className="shell pb-[clamp(60px,8vw,120px)]">
-          <AutomationCatalogue rows={rows} tiers={TIERS} />
+          <AutomationCatalogue rows={rows} tiers={TIERS} platforms={PLATFORMS.map(({ id, name, icon, workflows }) => ({ id, name, icon, workflows }))} />
         </section>
       </main>
       <SiteFooter />

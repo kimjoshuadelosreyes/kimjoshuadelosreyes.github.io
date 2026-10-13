@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import type { PlatformMark } from "@/lib/automations";
 import Icon from "./Icons";
+import PlatformMarks from "./PlatformMarks";
 
 export type CatalogueRow = {
   id: string;
@@ -11,7 +13,8 @@ export type CatalogueRow = {
   category: string;
   summary: string;
   trigger: string;
-  integrations: string[];
+  platforms: PlatformMark[];
+  nodes: number;
   behaviours: number;
   /** A page on this site, where the workflow has one. */
   href: string | null;
@@ -25,13 +28,17 @@ export type CatalogueRow = {
 export default function AutomationCatalogue({
   rows,
   tiers,
+  platforms,
 }: {
   rows: CatalogueRow[];
+  /** Every platform in the library, for the filter. */
+  platforms: (PlatformMark & { workflows: number })[];
   tiers: { id: string; label: string; note: string }[];
 }) {
   const [search, setSearch] = useState("");
   const [tier, setTier] = useState("all");
   const [category, setCategory] = useState("all");
+  const [platform, setPlatform] = useState("all");
 
   const categories = useMemo(() => [...new Set(rows.map((r) => r.category))], [rows]);
 
@@ -41,9 +48,10 @@ export default function AutomationCatalogue({
       (r) =>
         (tier === "all" || r.tier === tier) &&
         (category === "all" || r.category === category) &&
-        (!q || [r.name, r.summary, r.category, r.trigger, ...r.integrations].some((t) => t.toLowerCase().includes(q))),
+        (platform === "all" || r.platforms.some((p) => p.id === platform)) &&
+        (!q || [r.name, r.summary, r.category, r.trigger, ...r.platforms.map((p) => p.name)].some((t) => t.toLowerCase().includes(q))),
     );
-  }, [rows, search, tier, category]);
+  }, [rows, search, tier, category, platform]);
 
   const pill = (active: boolean) =>
     `inline-flex min-h-[40px] items-center gap-2 rounded-full px-4 text-[13px] font-medium tracking-[0.01em] transition-all cursor-pointer ${
@@ -72,7 +80,7 @@ export default function AutomationCatalogue({
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search: refund, Discord, webhook..."
+            placeholder="Search: refund, Shopify, agent..."
             aria-label="Search the workflows"
             className="w-full rounded-full border border-hairline bg-surface py-2.5 pl-10 pr-4 text-[14px] text-ink placeholder:text-muted/70 focus:border-electric focus:outline-none focus:ring-1 focus:ring-electric transition-colors"
           />
@@ -95,6 +103,20 @@ export default function AutomationCatalogue({
         ))}
       </div>
 
+      <p className="eyebrow mt-[26px]">The {platforms.length} platforms</p>
+      <div className="autos-platforms" role="group" aria-label="Filter by platform" data-od-id="automation-platforms">
+        <button type="button" aria-pressed={platform === "all"} onClick={() => setPlatform("all")} className="autos-platform">
+          All platforms
+        </button>
+        {platforms.map((p) => (
+          <button key={p.id} type="button" aria-pressed={platform === p.id} onClick={() => setPlatform(platform === p.id ? "all" : p.id)} className="autos-platform">
+            <img src={`/platforms/${p.icon}`} alt="" width={16} height={16} loading="lazy" decoding="async" />
+            {p.name}
+            <span>{p.workflows}</span>
+          </button>
+        ))}
+      </div>
+
       <p className="mt-6 text-[13px] text-muted" aria-live="polite">
         Showing {filtered.length} of {rows.length} workflows
       </p>
@@ -108,6 +130,7 @@ export default function AutomationCatalogue({
               setSearch("");
               setTier("all");
               setCategory("all");
+              setPlatform("all");
             }}
             className="mt-4 min-h-[40px] cursor-pointer rounded-full border border-hairline bg-surface px-4 text-[13px] font-medium text-ink hover:text-electric"
           >
@@ -130,20 +153,15 @@ export default function AutomationCatalogue({
                         <h3>{r.href ? <Link href={r.href}>{r.name}</Link> : r.name}</h3>
                         <div className="autos-tags">
                           <span className="autos-tag">{r.trigger}</span>
+                          <span className="autos-tag">{r.nodes} nodes</span>
                           <span className="autos-tag">{r.behaviours} tested</span>
                         </div>
                       </div>
                       <div>
                         <p>{r.summary}</p>
-                        {r.integrations.length > 0 && (
-                          <div className="autos-tags">
-                            {r.integrations.map((i) => (
-                              <span key={i} className="autos-tag">
-                                {i}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                        <div className="mt-[10px]">
+                          {r.platforms.length > 0 ? <PlatformMarks marks={r.platforms} label={`Platforms ${r.name} connects to`} /> : <span className="autos-tag">Logic only, no platform</span>}
+                        </div>
                       </div>
                       <div className="autos-links">
                         {r.href && (
