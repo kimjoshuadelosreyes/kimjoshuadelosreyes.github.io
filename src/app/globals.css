@@ -801,7 +801,9 @@
     line-height: 1.2;
     white-space: nowrap;
   }
-  .reel-tool-chip svg { flex: none; width: 1.15em; height: 1.15em; }
+  .reel-tool-chip svg,
+  .reel-tool-chip img { flex: none; width: 1.15em; height: 1.15em; }
+  .reel-tool-chip img { object-fit: contain; border-radius: 2px; }
 
   /* A small or short laptop: there is no room beside the plate for chips that
      are still legible, so they line up in a row beneath it instead and the

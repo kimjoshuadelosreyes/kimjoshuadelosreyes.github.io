@@ -652,7 +652,7 @@ export default function BuildReel() {
           t4 - 0.4,
         )
         .fromTo(
-          q(".reel-wall-chip svg"),
+          q(".reel-wall-chip svg, .reel-wall-chip img"),
           { scale: 1 },
           { scale: 1.45, duration: 0.18, ease: "sine.inOut", stagger: { amount: 0.6, repeat: 1, yoyo: true } },
           t4 + 0.75,
