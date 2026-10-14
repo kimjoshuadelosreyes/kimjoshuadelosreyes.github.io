@@ -809,9 +809,9 @@
   @media (max-width: 1279px), (max-height: 660px) {
     .reel-stage { --pw: min(46vw, 64svh, 900px); }
     .reel-track .reel-wall { width: var(--pw); }
-    .reel-track .reel-wall { gap: clamp(10px, 2.2svh, 22px); }
-    .reel-track .reel-wall-chip { font-size: clamp(12px, 2.1svh, 16px); }
-    .reel-track .reel-wall-label { margin-bottom: 8px; }
+    .reel-track .reel-wall { gap: clamp(8px, 1.6svh, 16px) 16px; }
+    .reel-track .reel-wall-chip { font-size: clamp(9px, 1.25svh, 11.5px); }
+    .reel-track .reel-wall-label { margin-bottom: 5px; }
     .reel-track { right: clamp(20px, 3vw, 64px); }
     .reel-orbit { inset: calc(100% + 1.6em) 0 auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5em 0.6em; }
     .reel-chip { position: static; }
@@ -1025,10 +1025,13 @@
   .reel-trend { fill: none; stroke: var(--color-electric); stroke-width: 2.4; stroke-linejoin: round; stroke-dasharray: 1; }
 
   /* 5 — the wall: every tool, grouped */
-  .reel-wall { justify-self: start; width: calc(var(--pw) * 1.22); display: grid; gap: clamp(18px, 3.4svh, 36px); }
-  .reel-wall-label { margin-bottom: 12px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-electric); }
-  .reel-wall-group ul { display: flex; flex-wrap: wrap; gap: clamp(8px, 0.8vw, 12px); }
-  .reel-wall-chip { font-size: clamp(14px, 1.3vw, 20px); }
+  /* Six groups and some eighty tools: two columns of groups, small chips, so the
+     whole wall is on screen at once. */
+  .reel-wall { justify-self: start; width: calc(var(--pw) * 1.22); display: grid; grid-template-columns: 1fr 1fr; gap: clamp(12px, 2.4svh, 26px) clamp(18px, 2vw, 34px); align-content: start; }
+  .reel-wall-label { margin-bottom: 8px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-electric); }
+  .reel-wall-group ul { display: flex; flex-wrap: wrap; gap: clamp(4px, 0.42vw, 7px); }
+  .reel-wall-chip { font-size: clamp(10px, min(0.82vw, 1.5svh), 13.5px); }
+  .reel-wall-chip .reel-tool-chip { gap: 0.45em; padding: 0.34em 0.7em; }
 
   /* -- the rail: phone, and reduced motion -- */
   .reel--compact { min-height: 0; padding-bottom: clamp(28px, 6vw, 56px); }
@@ -1049,7 +1052,9 @@
   .reel--compact .reel-sheen,
   .reel--compact .reel-cursor { display: none; }
   .reel-finale { margin-top: clamp(40px, 9vw, 64px); }
-  .reel-finale .reel-wall { width: auto; margin-top: 24px; }
+  .reel-finale .reel-wall { width: auto; margin-top: 24px; grid-template-columns: 1fr; gap: 18px; }
+  .reel-finale .reel-wall-chip { font-size: 12px; }
+  .reel-finale .reel-wall-group ul { gap: 5px; }
 
   /* System flow — one pinned frame.
      A 240svh runway with a 100svh sticky stage, so the frame holds for 140svh

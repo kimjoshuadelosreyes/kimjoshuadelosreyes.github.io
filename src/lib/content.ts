@@ -89,13 +89,14 @@ export const FLOW = {
 } as const;
 
 /**
- * The stack — every platform and technology on offer, grouped. This is the one
- * list the reel's chips and its closing wall are built from, so a tool can never
- * be on a plate and missing from the wall.
+ * The stack — every platform and technology the owner has built with, grouped.
+ * This is the one list the reel's chips and its closing wall are built from, so
+ * a tool can never be on a plate and missing from the wall.
  *
- * Automation and AI are the tools named by the owner. Web is hand-picked from
- * current coded stacks (no page builders): edit it to match what is really used.
- * `tint` is the mark beside the name, close to each tool's own colour.
+ * Every name here was either named by the owner or is in one of their projects
+ * or production workflows: add nothing that has not been used. `tint` is the
+ * mark beside the name, close to each tool's own colour (white where the
+ * tool's own is too dark for the wall).
  */
 export const STACK = [
   {
@@ -110,6 +111,13 @@ export const STACK = [
       { name: "Three.js", tint: "#ffffff" },
       { name: "Astro", tint: "#ff5d01" },
       { name: "Vercel", tint: "#ffffff" },
+      { name: "Vite", tint: "#9135ff" },
+      { name: "Vue 3", tint: "#4fc08d" },
+      { name: "Framer Motion", tint: "#ffffff" },
+      { name: "Lenis", tint: "#a3a3a3" },
+      { name: "Hono", tint: "#e36002" },
+      { name: "tRPC", tint: "#2596be" },
+      { name: "next-intl", tint: "#a3a3a3" },
     ],
   },
   {
@@ -120,6 +128,10 @@ export const STACK = [
       { name: "Make", tint: "#a855f7" },
       { name: "Zapier", tint: "#ff4f00" },
       { name: "Windmill", tint: "#3b82f6" },
+      { name: "Apify", tint: "#a3a3a3" },
+      { name: "Firecrawl", tint: "#a3a3a3" },
+      { name: "SerpAPI", tint: "#a3a3a3" },
+      { name: "RSS", tint: "#ffa500" },
       { name: "Custom code", tint: "#f0c550" },
     ],
   },
@@ -133,9 +145,80 @@ export const STACK = [
       { name: "Gemini", tint: "#8e75b2" },
       // Xiaomi's model family, shown under Xiaomi's own mark.
       { name: "MiMo", tint: "#ff6900" },
+      { name: "Groq", tint: "#a3a3a3" },
       { name: "ElevenLabs", tint: "#ffffff" },
       { name: "Higgsfield", tint: "#d1fe17" },
       { name: "Open-source models", tint: "#a3a3a3" },
+    ],
+  },
+  {
+    key: "data",
+    label: "Data and backend",
+    tools: [
+      { name: "Supabase", tint: "#3fcf8e" },
+      { name: "PostgreSQL", tint: "#4169e1" },
+      { name: "MongoDB", tint: "#47a248" },
+      { name: "Drizzle", tint: "#c5f74f" },
+      { name: "Bubble", tint: "#a3a3a3" },
+      { name: "Airtable", tint: "#18bfff" },
+      { name: "Google Sheets", tint: "#34a853" },
+      { name: "Google Drive", tint: "#4285f4" },
+      { name: "Tableau", tint: "#a3a3a3" },
+      { name: "PostHog", tint: "#ffffff" },
+      { name: "Umami", tint: "#ffffff" },
+      { name: "Docker", tint: "#2496ed" },
+      { name: "Coolify", tint: "#ffffff" },
+      { name: "AWS", tint: "#a3a3a3" },
+      { name: "Google Cloud", tint: "#4285f4" },
+      { name: "Cloudflare", tint: "#f38020" },
+    ],
+  },
+  {
+    key: "business",
+    label: "CRM and business tools",
+    tools: [
+      { name: "HubSpot", tint: "#ff7a59" },
+      { name: "GoHighLevel", tint: "#a3a3a3" },
+      { name: "Twenty", tint: "#ffffff" },
+      { name: "SuiteCRM", tint: "#a3a3a3" },
+      { name: "Vtiger", tint: "#a3a3a3" },
+      { name: "Odoo", tint: "#ffffff" },
+      { name: "ERPNext", tint: "#0089ff" },
+      { name: "Open Mercato", tint: "#a3a3a3" },
+      { name: "Shopify", tint: "#7ab55c" },
+      { name: "Stripe", tint: "#635bff" },
+      { name: "Wix", tint: "#0c6efc" },
+      { name: "Strapi", tint: "#4945ff" },
+      { name: "Cal.com", tint: "#ffffff" },
+      { name: "Documenso", tint: "#a3a3a3" },
+      { name: "Google Workspace", tint: "#4285f4" },
+      { name: "Notion", tint: "#ffffff" },
+      { name: "ClickUp", tint: "#7b68ee" },
+      { name: "Jira", tint: "#ffffff" },
+      { name: "Plane", tint: "#ffffff" },
+    ],
+  },
+  {
+    key: "messaging",
+    label: "Messaging and community",
+    tools: [
+      { name: "Slack", tint: "#a3a3a3" },
+      { name: "Discord", tint: "#5865f2" },
+      { name: "Telegram", tint: "#26a5e4" },
+      { name: "WhatsApp Business", tint: "#25d366" },
+      { name: "Twilio", tint: "#a3a3a3" },
+      { name: "Gmail", tint: "#ea4335" },
+      { name: "SendGrid", tint: "#a3a3a3" },
+      { name: "Mailchimp", tint: "#ffe01b" },
+      { name: "Kit", tint: "#ffffff" },
+      { name: "Listmonk", tint: "#ffffff" },
+      { name: "Mautic", tint: "#4e5e9e" },
+      { name: "Postiz", tint: "#ffffff" },
+      { name: "Zendesk", tint: "#ffffff" },
+      { name: "Intercom", tint: "#6afdef" },
+      { name: "Chatwoot", tint: "#1f93ff" },
+      { name: "Mattermost", tint: "#ffffff" },
+      { name: "Skool", tint: "#a3a3a3" },
     ],
   },
 ] as const;
@@ -179,7 +262,7 @@ export const BUILDS = [
 export const BUILDS_FINALE = {
   ghost: "Stack",
   name: "The whole stack.",
-  copy: "All of it written in code, with no page builders. These are the tools I reach for most.",
+  copy: "Sites are written in code. Around them, these are the tools I have built with and connected, open source and enterprise alike.",
 } as const;
 
 /** The mark colour for a tool named on a plate. */

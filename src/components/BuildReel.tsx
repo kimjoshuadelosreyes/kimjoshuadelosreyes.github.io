@@ -352,7 +352,7 @@ export default function BuildReel() {
           opacity: 0,
           y: 18,
           duration: 0.5,
-          stagger: 0.025,
+          stagger: { amount: 0.6 },
           scrollTrigger: { trigger: q(".reel-wall")[0], start: "top 84%", once: true },
         });
         return;
@@ -647,13 +647,14 @@ export default function BuildReel() {
             y: (i: number) => scatter(i).y,
             rotation: (i: number) => scatter(i).rotation,
           },
-          { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.7, ease: "power3.out", stagger: 0.035 },
+          // The stagger is a total, not a step: the wall takes the same time to land however many tools are on it.
+          { autoAlpha: 1, scale: 1, x: 0, y: 0, rotation: 0, duration: 0.7, ease: "power3.out", stagger: { amount: 0.7 } },
           t4 - 0.4,
         )
         .fromTo(
           q(".reel-wall-chip svg"),
           { scale: 1 },
-          { scale: 1.45, duration: 0.18, ease: "sine.inOut", stagger: { each: 0.03, repeat: 1, yoyo: true } },
+          { scale: 1.45, duration: 0.18, ease: "sine.inOut", stagger: { amount: 0.6, repeat: 1, yoyo: true } },
           t4 + 0.75,
         )
         .to({}, { duration: 0.01 }, END);

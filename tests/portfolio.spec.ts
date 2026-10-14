@@ -505,13 +505,14 @@ test.describe("page boots", () => {
     await expect(page.locator("#work .reel-caption")).toHaveCount(5);
     /* Every tool is on the wall, in its group, on both branches. */
     const wall = page.locator('#work [data-od-id="reel-stack"]');
-    await expect(wall.locator(".reel-wall-group")).toHaveCount(3);
-    await expect(wall.locator(".reel-wall-chip")).toHaveCount(21);
-    for (const tool of ["Next.js", "TypeScript", "n8n", "Windmill", "OpenAI", "Claude", "Gemini", "Higgsfield", "MiMo"]) {
+    await expect(wall.locator(".reel-wall-group")).toHaveCount(6);
+    await expect(wall.locator(".reel-wall-chip")).toHaveCount(85);
+    for (const tool of ["Next.js", "TypeScript", "n8n", "Windmill", "OpenAI", "Claude", "Gemini", "Higgsfield", "MiMo", "Supabase", "Twenty", "Chatwoot", "GoHighLevel", "Discord"]) {
       await expect(wall.locator(".reel-wall-chip", { hasText: tool }).first()).toBeAttached();
     }
-    // Hand-coded only: no page builder is named anywhere in the reel.
-    await expect(page.locator("#work .reel")).not.toContainText(/webflow|framer|wordpress/i);
+    // Sites are hand-coded: the builders offered elsewhere are not named in the reel.
+    // (Framer Motion is an animation library, and Wix and Bubble are platforms that were integrated with.)
+    await expect(page.locator("#work .reel")).not.toContainText(/webflow|wordpress/i);
     // The dashboard is the one plate with data-looking marks; it says they are not real.
     await expect(page.locator("#work .reel-dash-head span")).toHaveText(/example/i);
 
@@ -579,9 +580,9 @@ test.describe("page boots", () => {
     // between it and the index.
     expect(gap, "the index must follow the rail directly").toBeLessThanOrEqual(8);
     const railH = await page.evaluate(() => document.querySelector(".reel")!.getBoundingClientRect().height);
-    // Rail plus the stack list is a screen and a bit; the runway is 3.2 screens.
+    // Rail plus the stack list of some eighty tools is about two screens; with the runway it would be over five.
     const vh = await page.evaluate(() => window.innerHeight);
-    expect(railH, "the rail must not carry the desktop runway").toBeLessThan(vh * 2);
+    expect(railH, "the rail must not carry the desktop runway").toBeLessThan(vh * 2.5);
   });
 
   test("every work index row links to its case study", async ({ page }) => {
@@ -1302,7 +1303,7 @@ test.describe("scroll-driven motion", () => {
           );
         });
       });
-      expect(wall.length).toBe(21);
+      expect(wall.length).toBe(85);
       expect(wall.every(Boolean), "every tool is on screen, landed, at the end").toBe(true);
     }
 
