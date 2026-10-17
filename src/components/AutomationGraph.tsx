@@ -246,7 +246,7 @@ export default function AutomationGraph({
   const perStep = Math.min(55, Math.round(640 / (story.length + 1)));
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1023px), (prefers-reduced-motion: reduce)");
+    const mq = window.matchMedia("(max-width: 767px), (prefers-reduced-motion: reduce)");
     const apply = () => setCompact(mq.matches);
     apply();
     mq.addEventListener("change", apply);
@@ -274,15 +274,8 @@ export default function AutomationGraph({
       const q = gsap.utils.selector(root);
 
       if (compact) {
-        (q(".auto-step") as HTMLElement[]).forEach((s) => {
-          gsap.from(s.children, {
-            opacity: 0,
-            y: 28,
-            duration: 0.7,
-            stagger: 0.1,
-            scrollTrigger: { trigger: s, start: "top 84%", once: true },
-          });
-        });
+        // Guarantee steps are fully visible immediately
+        gsap.set(q(".auto-step"), { opacity: 1, visibility: "visible" });
         return;
       }
 

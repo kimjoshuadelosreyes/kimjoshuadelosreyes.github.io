@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, SplitText, prefersReducedMotion } from "@/lib/gsap";
 import { HERO, HERO_LANDING, HERO_PROOF, EMAIL } from "@/lib/content";
@@ -106,6 +107,8 @@ const CARD_SEATS = [
   "lg:left-[8vw] lg:bottom-[15%] xl:left-[13vw]",
   "lg:right-[7vw] lg:bottom-[18%] xl:right-[12vw]",
 ] as const;
+
+const CARD_LINKS = ["#work", "#automations", "#automations", "#capabilities"] as const;
 
 /* Runs as the HTML is parsed, before first paint, so the hero never flashes its
    resting layout ahead of the intro. `data-live` switches on the pinned runway
@@ -614,7 +617,22 @@ export default function Hero() {
           </p>
 
           <p className="hero-meta mt-[clamp(4px,1svh,7px)] text-[clamp(9.5px,1.2svh,11.5px)] uppercase tracking-[0.07em] text-brown/70 lg:mt-[7px] lg:text-[11.5px]">
-            {HERO_PROOF}
+            Built for{" "}
+            <Link href="/work/passivae" className="underline underline-offset-2 hover:text-electric transition-colors">
+              Passivae
+            </Link>{" "}
+            ·{" "}
+            <Link href="/work/monno" className="underline underline-offset-2 hover:text-electric transition-colors">
+              monno
+            </Link>{" "}
+            ·{" "}
+            <Link href="/work/trestle" className="underline underline-offset-2 hover:text-electric transition-colors">
+              Trestle
+            </Link>{" "}
+            ·{" "}
+            <Link href="/work/owwo" className="underline underline-offset-2 hover:text-electric transition-colors">
+              OWWO Chicken
+            </Link>
           </p>
         </div>
       </div>
@@ -636,7 +654,10 @@ export default function Hero() {
             {HERO_LANDING.cards.map((card, i) => (
               <div key={card.title} className={`hero-card lg:absolute lg:w-[clamp(190px,16vw,244px)] ${CARD_SEATS[i]}`}>
                 <div className="hero-card-float h-full">
-                  <div className="hero-glass flex h-full flex-col items-start gap-[10px] p-[14px] text-left lg:gap-[14px] lg:p-[18px]">
+                  <a
+                    href={CARD_LINKS[i]}
+                    className="hero-glass flex h-full flex-col items-start gap-[10px] p-[14px] text-left transition-transform duration-200 hover:scale-[1.03] hover:border-electric/40 lg:gap-[14px] lg:p-[18px]"
+                  >
                     <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-electric text-white lg:h-[40px] lg:w-[40px]">
                       <Icon name={card.icon} className="h-[16px] w-[16px] lg:h-[18px] lg:w-[18px]" />
                     </span>
@@ -648,7 +669,7 @@ export default function Hero() {
                         {card.note}
                       </span>
                     </span>
-                  </div>
+                  </a>
                 </div>
               </div>
             ))}

@@ -6,7 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import Icon from "@/components/Icons";
 import Ask from "@/components/Ask";
 import AutomationCatalogue, { type CatalogueRow } from "@/components/AutomationCatalogue";
-import { breadcrumbLd } from "@/lib/site";
+import { breadcrumbLd, SITE } from "@/lib/site";
 import { LIBRARY, PLATFORMS, SOURCE_NOTES, TRIGGER_LABELS, WORKFLOWS, fileUrl, isProduction, marksOf, pageOf } from "@/lib/automations";
 
 /**
@@ -19,7 +19,27 @@ export const metadata: Metadata = {
   title: "Automation library",
   description,
   alternates: { canonical: "/automations/" },
-  openGraph: { title: "Automation library", description, url: "/automations/" },
+  openGraph: {
+    type: "website",
+    title: "Automation library",
+    description,
+    url: "/automations/",
+    siteName: `${SITE.name} — ${SITE.brand}`,
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Automation library — open-source n8n workflows",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Automation library",
+    description,
+    images: ["/opengraph-image.png"],
+  },
 };
 
 /** The groups the list is shown in. Work that ran in production is its own group, and comes first. */

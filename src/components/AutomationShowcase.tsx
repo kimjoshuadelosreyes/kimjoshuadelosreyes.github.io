@@ -75,7 +75,7 @@ export default function AutomationShowcase({ systems }: { systems: ShownSystem[]
           <p className="eyebrow">Runs on</p>
           <PlatformMarks marks={system.platforms} label={`Platforms ${system.name} runs on`} />
         </div>
-        <p className="autos-open hidden lg:block">
+        <p className="autos-open">
           <Link href={system.href} className="ask-cta" data-od-id="automation-open">
             Open {system.name}: {system.size}, step by step
             <Icon name="arrow" className="arrow-ic" />

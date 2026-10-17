@@ -150,11 +150,41 @@ export default function Work() {
                     <span className="work-index__tag" aria-hidden="true">
                       {p.tag}
                     </span>
-                    <span className="work-index__name">
-                      {p.name}
-                      <Icon name="arrow" className="work-index__arrow" />
+                    <span className="work-index__name flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center">
+                        {p.name}
+                        <Icon name="arrow" className="work-index__arrow" />
+                      </span>
+                      {p.liveUrl ? (
+                        <span className="text-[11px] font-normal tracking-wide text-electric bg-electric/10 px-2 py-0.5 rounded-full border border-electric/25">
+                          Live site ↗
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-medium tracking-wide text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/25 inline-flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                          In progress
+                        </span>
+                      )}
                     </span>
                     <span className="work-index__copy">{p.copy}</span>
+                    <span className="work-index__actions flex items-center justify-between pt-2.5 mt-1 border-t border-white/6 text-[12px]">
+                      <span className="text-electric group-hover:underline">Read case study →</span>
+                      {p.liveUrl && (
+                        <span
+                          role="link"
+                          tabIndex={0}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.open(p.liveUrl, "_blank", "noopener,noreferrer");
+                          }}
+                          className="text-inkfg/60 hover:text-white inline-flex items-center gap-1 transition-colors py-0.5 px-2 rounded-full hover:bg-white/10 cursor-pointer"
+                        >
+                          <span>Visit site</span>
+                          <span aria-hidden="true">↗</span>
+                        </span>
+                      )}
+                    </span>
                   </Link>
                 </li>
               ))}

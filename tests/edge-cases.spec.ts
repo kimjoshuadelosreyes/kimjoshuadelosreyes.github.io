@@ -266,10 +266,10 @@ test.describe("QAQC: Case studies (/work/[id])", () => {
 
   test("a project with no public address says its screens are from a local build", async ({ page }) => {
     const bag = watchForErrors(page);
-    await page.goto("/work/trestle");
+    await page.goto("/work/budi");
     await page.waitForLoadState("domcontentloaded");
 
-    await expect(page.locator("h1")).toContainText("Trestle");
+    await expect(page.locator("h1")).toContainText("Budi");
     await expect(page.locator(".case-shot img")).toHaveCount(3);
     await expect(page.locator(".case-shots__note")).toContainText(/local build/i);
     await expect(page.getByRole("link", { name: /^Visit /i })).toHaveCount(0);

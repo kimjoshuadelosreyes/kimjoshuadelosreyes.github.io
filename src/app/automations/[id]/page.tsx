@@ -8,7 +8,7 @@ import Icon from "@/components/Icons";
 import Ask from "@/components/Ask";
 import AutomationGraph from "@/components/AutomationGraph";
 import PlatformMarks from "@/components/PlatformMarks";
-import { breadcrumbLd } from "@/lib/site";
+import { breadcrumbLd, SITE } from "@/lib/site";
 import {
   AUTOMATION_PAGES,
   LIBRARY,
@@ -56,7 +56,27 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title,
     description: page.line,
     alternates: { canonical: path },
-    openGraph: { type: "article", title, description: page.line, url: path },
+    openGraph: {
+      type: "article",
+      title,
+      description: page.line,
+      url: path,
+      siteName: `${SITE.name} — ${SITE.brand}`,
+      images: [
+        {
+          url: "/opengraph-image.png",
+          width: 1200,
+          height: 630,
+          alt: `${page.name} automation architecture`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: page.line,
+      images: ["/opengraph-image.png"],
+    },
   };
 }
 

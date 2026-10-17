@@ -5,7 +5,11 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 import Icon from "@/components/Icons";
-import { ARCHIVE_PROJECTS, ArchiveProject, CATEGORY_LABELS, PROOF_STATS } from "@/lib/content";
+import { ARCHIVE_PROJECTS, ArchiveProject, CATEGORY_LABELS, PROJECTS, PROOF_STATS } from "@/lib/content";
+
+const LIVE_URL_MAP = Object.fromEntries(
+  PROJECTS.filter((p) => p.liveUrl).map((p) => [p.id, p.liveUrl!])
+);
 
 export default function ArchivePage() {
   const [search, setSearch] = useState("");
@@ -178,17 +182,36 @@ export default function ArchivePage() {
                       </td>
 
                       <td className="py-4 pl-4 text-right align-top whitespace-nowrap">
-                        {item.link ? (
-                          <Link
-                            href={item.link}
-                            className="inline-flex items-center gap-1 font-medium text-[13px] text-electric hover:underline"
-                          >
-                            <span>Case Study</span>
-                            <Icon name="arrow" className="h-3 w-3" />
-                          </Link>
-                        ) : (
-                          <span className="text-[12px] text-muted/50">—</span>
-                        )}
+                        <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-2.5">
+                          {item.link && (
+                            <Link
+                              href={item.link}
+                              className="inline-flex items-center gap-1 font-medium text-[13px] text-electric hover:underline"
+                            >
+                              <span>Case Study</span>
+                              <Icon name="arrow" className="h-3 w-3" />
+                            </Link>
+                          )}
+                          {LIVE_URL_MAP[item.id] ? (
+                            <a
+                              href={LIVE_URL_MAP[item.id]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[12px] font-medium text-brown hover:text-electric transition-colors"
+                            >
+                              <span>Live Site</span>
+                              <span aria-hidden="true">↗</span>
+                            </a>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-500/90 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/25">
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                              In progress
+                            </span>
+                          )}
+                          {!item.link && !LIVE_URL_MAP[item.id] && (
+                            <span className="text-[12px] text-muted/50">—</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -310,6 +310,8 @@ export type Project = {
    * has no public address. The page says so.
    */
   local?: boolean;
+  /** Whether the project is currently in progress / in build. */
+  inProgress?: boolean;
 };
 
 export const PROJECTS: Project[] = [
@@ -374,7 +376,7 @@ export const PROJECTS: Project[] = [
       { title: "Typed once", copy: "The estimate becomes the budget without being retyped. That one hand-off is the reason the product exists." },
     ],
     techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Three.js", "Framer Motion", "Lenis"],
-    local: true,
+    liveUrl: "https://trestle.so/",
   },
   {
     id: "tally",
@@ -397,7 +399,7 @@ export const PROJECTS: Project[] = [
       { title: "A pivot, mid-build", copy: "The product changed direction while it was being built, from software a seller operates to a service that does the work. The brand and the groundwork carried over." },
     ],
     techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS"],
-    local: true,
+    liveUrl: "https://tally.com.ph/",
   },
   {
     id: "monno",
@@ -443,7 +445,7 @@ export const PROJECTS: Project[] = [
       { title: "Copy analysis", copy: "The message is looked at before it goes out." },
     ],
     techStack: ["React", "Vite", "TypeScript", "Tailwind CSS", "GSAP", "Three.js", "Open Mercato"],
-    local: true,
+    liveUrl: "https://funnelffoundry.net/",
   },
   {
     id: "owwo",
@@ -465,7 +467,7 @@ export const PROJECTS: Project[] = [
       { title: "From three places to one", copy: "Messenger, a sheet and Instagram became a single record in the CRM." },
     ],
     techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "GSAP", "Supabase", "n8n", "Vtiger"],
-    local: true,
+    liveUrl: "https://owwochicken.com.ph/",
   },
   {
     id: "construction-hub",
@@ -506,6 +508,7 @@ export const PROJECTS: Project[] = [
     ],
     techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Three.js", "Framer Motion"],
     local: true,
+    inProgress: true,
   },
   {
     id: "funded-prop-traders",

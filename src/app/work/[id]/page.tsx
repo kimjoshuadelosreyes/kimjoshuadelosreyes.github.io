@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import JsonLd from "@/components/JsonLd";
-import { breadcrumbLd } from "@/lib/site";
+import { breadcrumbLd, SITE } from "@/lib/site";
 import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 import Icon from "@/components/Icons";
@@ -36,11 +36,35 @@ export async function generateMetadata({
   const project = findProject(id);
   if (!project) return {};
   const path = `/work/${project.id}/`;
+  const title = `${project.name} — ${project.tag}`;
+  const description = project.copy;
+  const ogImage = `/img/work/${project.id}/desktop.webp`;
+
   return {
-    title: `${project.name} — ${project.tag}`,
-    description: project.copy,
+    title,
+    description,
     alternates: { canonical: path },
-    openGraph: { type: "article", title: `${project.name} — ${project.tag}`, description: project.copy, url: path },
+    openGraph: {
+      type: "article",
+      title,
+      description,
+      url: path,
+      siteName: `${SITE.name} — ${SITE.brand}`,
+      images: [
+        {
+          url: ogImage,
+          width: 1440,
+          height: 900,
+          alt: `${project.name} preview on desktop`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
   };
 }
 
@@ -90,15 +114,26 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ id: 
               )}
 
               {project.liveUrl && (
-                <a
-                  href={project.liveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn--ghost mt-6 inline-flex min-h-[44px] items-center gap-2 px-5 text-[14px]"
-                >
-                  <span>Visit {new URL(project.liveUrl).hostname.replace(/^www\./, "")}</span>
-                  <Icon name="arrow" className="arrow-ic" />
-                </a>
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <a
+                    href={project.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn--primary inline-flex min-h-[46px] items-center gap-2 px-6 text-[14.5px] font-medium shadow-xs transition-all"
+                  >
+                    <span>Visit {new URL(project.liveUrl).hostname.replace(/^www\./, "")}</span>
+                    <Icon name="arrow" className="arrow-ic" />
+                  </a>
+                  <span className="text-[12.5px] text-muted">Opens live site in new tab</span>
+                </div>
+              )}
+
+              {project.local && (
+                <div className="mt-6 inline-flex items-center gap-2.5 rounded-full bg-surface px-4 py-2 text-[13px] text-ink border border-hairline">
+                  <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="font-medium text-amber-400">In progress</span>
+                  <span className="text-muted">· Local build preview</span>
+                </div>
               )}
             </div>
           </header>
