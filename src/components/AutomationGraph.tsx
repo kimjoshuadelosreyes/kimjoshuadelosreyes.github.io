@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
+import { loadMotionPlugins } from "@/lib/gsap-motion";
 import type { Graph, PlatformMark, StoryStep } from "@/lib/automations";
 import SkipPin from "./SkipPin";
 
@@ -107,7 +108,7 @@ function Mark({ node, icons }: { node: Named; icons: Map<string, string> }) {
   const icon = node.platform && icons.get(node.platform);
   return (
     <span className={`auto-node-glyph${icon ? " auto-node-glyph--mark" : ""}`}>
-      {icon ? <img src={`/platforms/${icon}`} alt="" width={22} height={22} decoding="async" /> : <Glyph kind={node.kind} />}
+      {icon ? <img src={`/platforms/${icon}`} alt="" width={22} height={22} loading="lazy" decoding="async" /> : <Glyph kind={node.kind} />}
     </span>
   );
 }
@@ -267,10 +268,24 @@ export default function AutomationGraph({
     };
   }, []);
 
+  /* DrawSVG and MotionPath are not in the first-load bundle; the wires only
+     draw once they land. Compact (and reduced motion) never uses them. */
+  const [plugins, setPlugins] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    loadMotionPlugins().then(() => {
+      if (alive) setPlugins(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   useGSAP(
     () => {
       const el = root.current;
       if (!el || prefersReducedMotion()) return;
+      if (!compact && !plugins) return;
       const q = gsap.utils.selector(root);
 
       if (compact) {
@@ -379,7 +394,7 @@ export default function AutomationGraph({
         timeline.current = null;
       };
     },
-    { scope: root, dependencies: [compact, layoutKey, layout, mode], revertOnUpdate: true },
+    { scope: root, dependencies: [compact, layoutKey, layout, mode, plugins], revertOnUpdate: true },
   );
 
   /* Jump to a step: glide the playhead there and hold. */

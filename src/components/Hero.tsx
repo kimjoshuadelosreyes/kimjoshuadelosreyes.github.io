@@ -88,11 +88,12 @@ const I_STEM = { cx: 402.95, w: 93.05 } as const;
 const M_NOTCH = { cx: 734.6, y: 70, halfTop: 52.4, apex: 263.6 } as const;
 
 const PLATE_PATH = `M-40000 -40000H40000V40000H-40000Z ${WORDMARK_PATHS.join(" ")}`;
-/* The covers that hold the letters shut before the intro: K, I, M. */
+/* The covers that hold the letters shut before the intro: K, I, M. Each lifts
+   on its own cue — the stagger lives here so the CSS keyframes stay generic. */
 const PLATE_COVERS = [
-  { left: "-0.5%", width: "34.4%" },
-  { left: "36.7%", width: "10.8%" },
-  { left: "53%", width: "47.5%" },
+  { left: "-0.5%", width: "34.4%", animationDelay: "0s" },
+  { left: "36.7%", width: "10.8%", animationDelay: "0.07s" },
+  { left: "53%", width: "47.5%", animationDelay: "0.14s" },
 ] as const;
 
 /* The wordmark's box, shared verbatim by the plate so the two cannot drift. */
@@ -110,16 +111,48 @@ const CARD_SEATS = [
 
 const CARD_LINKS = ["#work", "#automations", "#automations", "#capabilities"] as const;
 
-/* Runs as the HTML is parsed, before first paint, so the hero never flashes its
-   resting layout ahead of the intro. `data-live` switches on the pinned runway
-   and tucks the landing behind the stage; `data-intro` holds the plate shut.
-   Skipped for reduced motion, and it stands down by itself if the timeline
-   never arrives to take over. */
-const INTRO_GATE = `(function(){try{var s=document.currentScript.parentElement,d=s.dataset;if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;d.live="";d.intro="pending";setTimeout(function(){if(d.intro==="pending"){delete d.intro;delete d.live}},6000)}catch(e){}})()`;
+/* Runs as the HTML is parsed, after the stage exists and before first paint.
+   The intro itself is CSS now, so it starts at first paint instead of waiting
+   for the bundle to hydrate — which is what used to leave the page as a blank
+   canvas sheet while the JS arrived. CSS cannot know three things without a
+   browser: where the eye sits in the artwork, how far the figure must be
+   pushed in for the face to read across the letters, and how far the plate
+   must open for the I's hole to swallow the stage. So this measures them,
+   writes them as custom properties, and tags the section `data-intro` so the
+   keyframes run; `data-live` switches on the pinned runway and tucks the
+   landing behind the stage. Skipped for reduced motion; and if the GSAP
+   timeline never arrives to take the exit over, it stands the runway back
+   down and leaves the resting hero. */
+const INTRO_SETUP = `(function(){try{
+var s=document.currentScript.parentElement;if(!s)return;
+if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+var stage=s.querySelector(".hero-stage"),mark=s.querySelector(".hero-wordmark"),
+portrait=s.querySelector(".hero-portrait"),img=s.querySelector(".hero-portrait img");
+if(!stage||!mark||!portrait||!img)return;
+var sr=stage.getBoundingClientRect(),mr=mark.getBoundingClientRect(),
+pr=portrait.getBoundingClientRect(),ir=img.getBoundingClientRect();
+var unit=mr.width/${WORDMARK_VIEWBOX.w};
+var fit=getComputedStyle(img).objectFit==="contain"?Math.min:Math.max;
+var k=fit(ir.width/${PORTRAIT.w},ir.height/${PORTRAIT.h});
+var artLeft=ir.left+(ir.width-${PORTRAIT.w}*k)/2,artTop=ir.bottom-${PORTRAIT.h}*k;
+var eyeX=artLeft+${PORTRAIT.w}*k*${PORTRAIT.eyeX},eyeY=artTop+${PORTRAIT.h}*k*${PORTRAIT.eyeY};
+var push=Math.max(1.6,Math.min(2.4,(mr.width*0.44)/(${PORTRAIT.w}*k*${PORTRAIT.headW})));
+var pushX=mr.left+mr.width/2-eyeX,pushY=mr.top+mr.height/2-eyeY;
+var stemX=mr.left-sr.left+${I_STEM.cx}*unit,stemY=mr.top-sr.top+mr.height/2;
+var open=1.1*Math.max(Math.max(stemX,sr.width-stemX)/(${I_STEM.w}*unit/2),Math.max(stemY,sr.height-stemY)/(mr.height/2));
+var st=s.style;
+st.setProperty("--hero-plate-open",String(open));
+st.setProperty("--hero-eye-x",(eyeX-pr.left)+"px");
+st.setProperty("--hero-eye-y",(eyeY-pr.top)+"px");
+st.setProperty("--hero-push",String(push));
+st.setProperty("--hero-push-x",pushX+"px");
+st.setProperty("--hero-push-y",pushY+"px");
+s.setAttribute("data-live","");s.setAttribute("data-intro","");
+setTimeout(function(){if(!(window.__timelines&&window.__timelines.hero)){s.removeAttribute("data-intro");s.removeAttribute("data-live")}},2600);
+}catch(e){}})()`;
 
 export default function Hero() {
   const root = useRef<HTMLElement>(null);
-  const introDone = useRef(false);
   const [ready, setReady] = useState(false);
   const [layoutKey, setLayoutKey] = useState(0);
 
@@ -198,38 +231,7 @@ export default function Hero() {
       /* ---- Measure once, with nothing transformed yet. ---- */
       const sr = stage.getBoundingClientRect();
       const mr = mark.getBoundingClientRect();
-      const pr = portrait.getBoundingClientRect();
-      const ir = img.getBoundingClientRect();
       const unit = mr.width / WORDMARK_VIEWBOX.w; // px per wordmark unit
-
-      /* Where the artwork actually sits inside the <img> box: bottom-anchored,
-         `contain` from lg and `cover` below it. */
-      const fit = getComputedStyle(img).objectFit === "contain" ? Math.min : Math.max;
-      const k = fit(ir.width / PORTRAIT.w, ir.height / PORTRAIT.h);
-      const art = {
-        left: ir.left + (ir.width - PORTRAIT.w * k) / 2,
-        top: ir.bottom - PORTRAIT.h * k,
-        w: PORTRAIT.w * k,
-        h: PORTRAIT.h * k,
-      };
-      const eye = { x: art.left + art.w * PORTRAIT.eyeX, y: art.top + art.h * PORTRAIT.eyeY };
-
-      /* Intro framing: the eyes on the wordmark's centre, the head about half
-         the wordmark wide, so the face reads across all three letters. Capped,
-         because past ~2.4x the photo runs out of pixels. */
-      const push = gsap.utils.clamp(1.6, 2.4, (mr.width * 0.44) / (art.w * PORTRAIT.headW));
-      const pushX = mr.left + mr.width / 2 - eye.x;
-      const pushY = mr.top + mr.height / 2 - eye.y;
-
-      /* How far the plate must open for the I's hole to swallow the stage. */
-      const stemX = mr.left - sr.left + I_STEM.cx * unit;
-      const stemY = mr.top - sr.top + mr.height / 2;
-      const open =
-        1.1 *
-        Math.max(
-          Math.max(stemX, sr.width - stemX) / ((I_STEM.w * unit) / 2),
-          Math.max(stemY, sr.height - stemY) / (mr.height / 2),
-        );
 
       /* How far the camera must dive for the M's notch to do the same. A stage
          corner is clear once it maps to a point above the cap line (open
@@ -250,10 +252,12 @@ export default function Hero() {
       dive *= 1.12;
 
       /* ---- Fixed state for the run. ---- */
-      gsap.set(plate, { autoAlpha: 1, transformOrigin: `${(I_STEM.cx / WORDMARK_VIEWBOX.w) * 100}% 50%` });
-      gsap.set(portrait, { transformOrigin: `${eye.x - pr.left}px ${eye.y - pr.top}px` });
+      /* The plate and the figure's push are CSS now, so the one thing GSAP has
+         to aim is the camera: the world scales about the notch it dives through. */
       gsap.set(world, { transformOrigin: `${notchX}px ${notchY}px` });
 
+      /* SplitText still splits the headline — not for the intro, which the CSS
+         keyframes carry, but because the exit lifts it out a line at a time. */
       const split = new SplitText(title, { type: "lines", linesClass: "split-line", mask: "lines" });
       const rest = q(".hero-lede, .hero-actions, .hero-meta, .hero-skip");
 
@@ -274,43 +278,11 @@ export default function Hero() {
       });
       gsap.set(q(".hero-landing-scene"), { transformOrigin: `${notchX}px ${notchY}px` });
 
-      /* ---- The one timeline. ---- */
+      /* ---- The one timeline: the exit, and the landing it arrives in. ----
+         The intro has no segment here any more: it is pure CSS, played at
+         first paint. What is left is everything the scroll drives, which is
+         the part that has to be a seekable function of time. */
       const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
-
-      /* intro */
-      tl.fromTo(
-        q(".hero-plate-cover"),
-        { scaleY: 1 },
-        { scaleY: 0, transformOrigin: "50% 0%", duration: 0.8, ease: "expo.inOut", stagger: 0.1 },
-        0,
-      )
-        .fromTo(
-          portrait,
-          { scale: push * 1.1, x: pushX, y: pushY },
-          { scale: push, x: pushX, y: pushY, duration: 1.1, ease: "none" },
-          0,
-        )
-        .fromTo(
-          portrait,
-          { scale: push, x: pushX, y: pushY },
-          { scale: 1, x: 0, y: 0, duration: 1.3, ease: "expo.inOut", immediateRender: false },
-          1.1,
-        )
-        .fromTo(plate, { scale: 1 }, { scale: open, duration: 1.3, ease: "expo.inOut" }, 1.1)
-        .set(plate, { autoAlpha: 0, immediateRender: false }, 2.4)
-        .fromTo(q(".hero-fog"), { opacity: 0 }, { opacity: 1, duration: 0.8, ease: "power1.inOut" }, 1.6)
-        .fromTo(
-          split.lines,
-          { yPercent: 110 },
-          { yPercent: 0, duration: 0.95, ease: "expo.out", stagger: 0.09 },
-          1.9,
-        )
-        .fromTo(
-          rest,
-          { opacity: 0, y: 18 },
-          { opacity: 1, y: 0, duration: 0.6, stagger: 0.07 },
-          2.25,
-        );
 
       /* exit */
       tl.fromTo(
@@ -426,8 +398,9 @@ export default function Hero() {
 
       (window.__timelines ??= {}).hero = tl;
 
-      /* The first frame is on the nodes now, so the CSS gate can stand down. */
-      release();
+      /* The reveal is CSS and runs on its own clock from first paint; the
+         timeline rides at rest until the scroll takes the playhead over. */
+      tl.time(REST);
 
       /* ---- Drivers. ---- */
       const mm = gsap.matchMedia();
@@ -438,10 +411,6 @@ export default function Hero() {
           start: "top top",
           end: "bottom bottom",
           onUpdate: (self) => {
-            /* A scroll during the intro takes the playhead over — it runs the
-               rest of the intro out on the way to wherever the scroll is. */
-            if (!introDone.current && self.progress === 0) return;
-            introDone.current = true;
             gsap.to(tl, {
               time: REST + self.progress * EXIT,
               duration: 0.45,
@@ -450,11 +419,8 @@ export default function Hero() {
             });
           },
         });
-        /* Loaded part-way down the runway: there is no intro to watch. */
-        if (st.progress > 0) {
-          introDone.current = true;
-          tl.time(REST + st.progress * EXIT);
-        }
+        /* Loaded part-way down the runway: start where the scroll already is. */
+        if (st.progress > 0) tl.time(REST + st.progress * EXIT);
       });
 
       mm.add("(max-width: 1023px)", () => {
@@ -491,19 +457,6 @@ export default function Hero() {
         }),
       );
 
-      if (introDone.current) {
-        if (tl.time() < REST) tl.time(REST);
-      } else {
-        gsap.to(tl, {
-          time: REST,
-          duration: REST,
-          ease: "none",
-          onComplete: () => {
-            introDone.current = true;
-          },
-        });
-      }
-
       /* Idle breathe on the artwork itself — a node the timeline never touches. */
       gsap.to(img, {
         scale: 1.012,
@@ -524,8 +477,6 @@ export default function Hero() {
 
   return (
     <section ref={root} id="top" className="hero relative" data-od-id="hero" suppressHydrationWarning>
-      <script dangerouslySetInnerHTML={{ __html: INTRO_GATE }} />
-
       {/* One stage on every viewport. Below lg it is a bottom-anchored flex
           column over the absolute planes; from lg it is the sticky pinned panel
           and every plane is absolute. */}
@@ -636,6 +587,10 @@ export default function Hero() {
           </p>
         </div>
       </div>
+
+      {/* Pre-paint: measures the intro's unknowns and starts the CSS reveal.
+          It sits after the stage because it has to read the stage. */}
+      <script dangerouslySetInnerHTML={{ __html: INTRO_SETUP }} />
 
       {/* 5 — the landing. Markup-wise the block after the stage, which is all it
              is below lg and without motion; live, CSS pins it behind the stage. */}

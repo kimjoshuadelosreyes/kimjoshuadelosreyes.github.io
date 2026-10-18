@@ -1624,10 +1624,9 @@
   }
 
   /* The intro plate: a canvas-coloured sheet with the wordmark knocked out of
-     it, in the wordmark's own box. Hidden unless the intro is going to run — the
-     pre-paint gate shows it, and the timeline takes it from there — so reduced
-     motion and no-JS get the resting hero and never see it. The sheet itself is
-     the SVG's oversized path; the covers hold each letter shut until its cue. */
+     it, in the wordmark's own box. Hidden by default, so reduced motion and
+     no-JS get the resting hero and never see it. The sheet itself is the SVG's
+     oversized path; the covers hold each letter shut until its cue. */
   .hero-plate {
     z-index: 20;
     color: var(--color-canvas);
@@ -1640,8 +1639,85 @@
     height: 102%;
     background: var(--color-canvas);
   }
-  .hero[data-intro="pending"] .hero-plate { visibility: visible; }
-  .hero[data-intro="pending"] .hero-copy { visibility: hidden; }
+
+  /* ------------------------------------------------------------------ *
+   * The hero intro — on CSS, at first paint.
+   *
+   * It used to be the first segment of the GSAP timeline, which meant the
+   * page held itself shut — a canvas sheet with the letters covered, copy
+   * hidden — until the bundle had downloaded, hydrated, and waited on
+   * `document.fonts.ready` and the portrait's decode. On a cold load that
+   * read as several seconds of nothing. The reveal is a pure function of
+   * time, so it moves to keyframes and starts at first paint instead; GSAP
+   * keeps everything the scroll drives (the dive through the M and the
+   * landing behind it), which is the part that has to be seekable.
+   *
+   * The three things CSS cannot know without a browser — where the eye sits,
+   * how far the figure pushes in, and how far the plate must open — are
+   * written as custom properties by the pre-paint script in Hero.tsx, with
+   * fallbacks so the sequence still resolves if it never ran. Everything is
+   * scoped to `[data-intro]`, which the script only sets when motion is
+   * allowed, so the resting state and the end state are the same: once the
+   * attribute goes, nothing snaps.
+   * ------------------------------------------------------------------ */
+  .hero[data-intro] .hero-plate {
+    visibility: visible;
+    transform-origin: 42.11% 50%; /* the I's stem, in the wordmark's own box */
+    will-change: transform, opacity;
+    animation: hero-plate-open 0.75s 0.18s cubic-bezier(0.87, 0, 0.13, 1) forwards;
+  }
+  .hero[data-intro] .hero-plate-cover {
+    transform-origin: 50% 0%;
+    will-change: transform;
+    animation: hero-cover-lift 0.5s cubic-bezier(0.87, 0, 0.13, 1) forwards;
+  }
+  .hero[data-intro] .hero-portrait {
+    transform-origin: var(--hero-eye-x, 50%) var(--hero-eye-y, 50%);
+    will-change: transform;
+    animation: hero-portrait-in 1s 0.18s cubic-bezier(0.87, 0, 0.13, 1) backwards;
+  }
+  .hero[data-intro] .hero-fog {
+    animation: hero-fog-in 0.5s 0.35s ease-in-out backwards;
+  }
+  .hero[data-intro] .hero-title,
+  .hero[data-intro] .hero-lede,
+  .hero[data-intro] .hero-actions,
+  .hero[data-intro] .hero-meta,
+  .hero[data-intro] .hero-skip {
+    animation: hero-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  .hero[data-intro] .hero-title { animation-delay: 0.6s; }
+  .hero[data-intro] .hero-lede { animation-delay: 0.78s; }
+  .hero[data-intro] .hero-actions { animation-delay: 0.86s; }
+  .hero[data-intro] .hero-meta { animation-delay: 0.94s; }
+  .hero[data-intro] .hero-skip { animation-delay: 0.94s; }
+
+  @keyframes hero-plate-open {
+    0% { transform: scale(1); opacity: 1; }
+    80% { opacity: 1; }
+    100% { transform: scale(var(--hero-plate-open, 16)); opacity: 0; visibility: hidden; }
+  }
+  @keyframes hero-cover-lift {
+    from { transform: scaleY(1); }
+    to { transform: scaleY(0); }
+  }
+  @keyframes hero-portrait-in {
+    0% {
+      transform: translate(var(--hero-push-x, 0px), var(--hero-push-y, 0px)) scale(calc(var(--hero-push, 1.6) * 1.08));
+    }
+    45% {
+      transform: translate(var(--hero-push-x, 0px), var(--hero-push-y, 0px)) scale(var(--hero-push, 1.6));
+    }
+    100% { transform: translate(0px, 0px) scale(1); }
+  }
+  @keyframes hero-fog-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes hero-rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   /* The figure bleeds into the canvas instead of sitting on it as a cut-out: its
      bottom feathers to nothing, so the body dissolves into the greige rather than

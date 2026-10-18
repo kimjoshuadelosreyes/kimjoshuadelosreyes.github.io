@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
+import { loadMotionPlugins } from "@/lib/gsap-motion";
 import { BUILDS, BUILDS_FINALE, STACK, tintOf } from "@/lib/content";
 import TechIcon from "./TechIcons";
 import Ask from "./Ask";
@@ -327,6 +328,19 @@ export default function BuildReel() {
   const root = useRef<HTMLDivElement>(null);
   const [compact, setCompact] = useState(false);
 
+  /* MotionPath is not in the first-load bundle; the packets only ride the
+     wires once it lands. Compact (and reduced motion) never uses it. */
+  const [plugins, setPlugins] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    loadMotionPlugins().then(() => {
+      if (alive) setPlugins(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px), (prefers-reduced-motion: reduce)");
     const apply = () => setCompact(mq.matches);
@@ -338,6 +352,7 @@ export default function BuildReel() {
   useGSAP(
     () => {
       if (!root.current || prefersReducedMotion()) return;
+      if (!compact && !plugins) return;
       const q = gsap.utils.selector(root);
 
       if (compact) {
@@ -684,7 +699,7 @@ export default function BuildReel() {
         if (window.__timelines?.reel === tl) delete window.__timelines.reel;
       };
     },
-    { scope: root, dependencies: [compact], revertOnUpdate: true },
+    { scope: root, dependencies: [compact, plugins], revertOnUpdate: true },
   );
 
   if (compact) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
-import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { ScrollTrigger } from "@/lib/gsap";
 import { NAV_LINKS, EMAIL } from "@/lib/content";
 import { useSectionHref } from "@/lib/useSectionHref";
 import { Wordmark } from "./Wordmark";
@@ -16,14 +16,6 @@ export default function Nav() {
 
   useGSAP(
     () => {
-      gsap.from(".nav-bar", {
-        yPercent: -120,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out",
-        delay: 0.15,
-      });
-
       ScrollTrigger.create({
         start: 24,
         end: "max",

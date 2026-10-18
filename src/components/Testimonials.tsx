@@ -26,14 +26,16 @@ import Ask from "./Ask";
  * `window.__timelines`.
  */
 
-/* The hero's real cues, in seconds of its 3.1s intro — the same numbers as the
-   timeline in Hero.tsx. If those move, move these. */
-const REST = 3.1;
+/* The hero's real intro cues, in seconds — the CSS keyframes in globals.css,
+   played at first paint. If those move, move these. The scroll-driven exit
+   still lives in `__timelines.hero`; this is the part that no longer waits
+   for it. */
+const INTRO = 1.54;
 const TRACKS = [
-  { name: ".hero-plate", from: 0, to: 2.4, note: "covers lift, then scale 1 → 15.6" },
-  { name: ".hero-portrait", from: 0, to: 2.4, note: "scale 2.4 → 1" },
-  { name: ".hero-title", from: 1.9, to: 2.94, note: "SplitText, 2 lines" },
-  { name: ".hero-lede + actions", from: 2.25, to: 3.1, note: "opacity, y" },
+  { name: ".hero-plate-cover", from: 0, to: 0.64, note: "covers lift, then the plate opens" },
+  { name: ".hero-portrait", from: 0.18, to: 1.18, note: "scale 2.4 → 1" },
+  { name: ".hero-title", from: 0.6, to: 1.2, note: "masked rise" },
+  { name: ".hero-lede + actions", from: 0.78, to: 1.54, note: "opacity, y" },
 ] as const;
 
 const START = 54; // where the handle rests, in % from the left
@@ -80,15 +82,15 @@ function MiniHero({ xray = false }: { xray?: boolean }) {
       {xray ? (
         <div className="xray-tracks">
           <p>
-            <b>__timelines.hero</b>
-            <span>0s → {REST}s</span>
+            <b>.hero intro</b>
+            <span>0s → {INTRO}s</span>
           </p>
           {TRACKS.map((t) => (
             <div key={t.name} className="xray-track">
               {/* Bar first: the wipe comes from the left, so the names sit on
                   the side that is revealed first. */}
               <div>
-                <i style={{ left: `${(t.from / REST) * 100}%`, width: `${((t.to - t.from) / REST) * 100}%` }} />
+                <i style={{ left: `${(t.from / INTRO) * 100}%`, width: `${((t.to - t.from) / INTRO) * 100}%` }} />
               </div>
               <span>{t.name}</span>
               <em>{t.note}</em>

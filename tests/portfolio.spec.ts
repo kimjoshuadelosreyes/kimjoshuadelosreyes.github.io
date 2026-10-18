@@ -269,6 +269,31 @@ test.describe("page boots", () => {
     await expect.poll(async () => page.locator("html.lenis").count()).toBe(1);
   });
 
+  test("the hero reveals itself without waiting for the bundle", async ({ page }) => {
+    /* The intro is CSS, played at first paint, so it must complete even while
+       the JS is still on the wire. This is the reported bug, pinned: the hero
+       used to hold itself shut — a blank canvas sheet — until the timeline
+       hydrated, which on a cold load could be several seconds of nothing. Hold
+       every chunk back and demand the headline still lands on its own. */
+    await page.route(/\/_next\/static\/chunks\/.*\.js(\?.*)?$/, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 6000));
+      await route.continue();
+    });
+
+    const start = Date.now();
+    await page.goto("/", { waitUntil: "commit", timeout: 120_000 });
+    await expect(page.locator(".hero-title")).toHaveCSS("opacity", "1", { timeout: 8000 });
+    const elapsed = Date.now() - start;
+
+    expect(elapsed, "the headline lands on its own, before the bundle").toBeLessThan(4000);
+    // The timeline that the scroll drives has NOT had its chance yet.
+    expect(
+      await page.evaluate(
+        () => Object.keys((window as unknown as { __timelines?: object }).__timelines ?? {}).length,
+      ),
+    ).toBe(0);
+  });
+
   test("the figure fills the stage and the copy rides the masked canvas scrim", async ({ page, isMobile }) => {
     await page.goto("/", { waitUntil: "load", timeout: 120_000 });
     // The intro runs ~3.1s and moves the figure; measure the resting hero.
@@ -905,8 +930,8 @@ test.describe("page boots", () => {
     expect(register.mark[0], "the wordmark is in register").toEqual(register.mark[1]);
     expect(Math.abs(register.copy[0][1] - register.copy[1][1]), "the headline is in register").toBeLessThanOrEqual(2);
 
-    // The timeline drawn in the x-ray names the real one.
-    await expect(frame.locator(".xray-tracks")).toContainText("__timelines.hero");
+    // The cue diagram under the wireframe names the real intro.
+    await expect(frame.locator(".xray-tracks")).toContainText(".hero intro");
     await expect(frame.locator(".xray-track")).toHaveCount(4);
     await expect(page.locator(".xray-fact h3")).toHaveText([
       "Hand-coded",
@@ -1509,8 +1534,9 @@ test.describe("scroll-driven motion", () => {
     await page.goto("/", { waitUntil: "load", timeout: 120_000 });
     await page.waitForTimeout(4500);
 
-    /* The timeline is authored to be a pure function of its time, so any frame
-       can be asked for directly, in any order — which is the whole contract. */
+    /* The intro is CSS now — it plays at first paint, off the timeline's clock
+       — so the timeline owns the exit, and that is the part authored to be a
+       pure function of its time: any frame can be asked for, in any order. */
     const at = (t: number) =>
       page.evaluate((time) => {
         const tl = (window as unknown as { __timelines: Record<string, { time(t: number): unknown }> })
@@ -1521,8 +1547,6 @@ test.describe("scroll-driven motion", () => {
         const line = g(".hero-title .split-line");
         return {
           plate: getComputedStyle(g(".hero-plate")).visibility,
-          plateScale: scale(g(".hero-plate")),
-          push: scale(g(".hero-portrait")),
           dive: scale(g(".hero-world")),
           // how far the first headline line sits out of its mask, in line heights
           line: new DOMMatrixReadOnly(getComputedStyle(line).transform).f / line.offsetHeight,
@@ -1535,26 +1559,21 @@ test.describe("scroll-driven motion", () => {
     // Out of order on purpose.
     const end = await at(rest + 2);
     const open = await at(0);
-    const mid = await at(1.75);
+    const mid = await at(rest + 0.7);
     const settled = await at(rest);
     const again = await at(0);
 
-    expect(open.plate, "frame 0 is the closed plate").toBe("visible");
-    expect(open.plateScale).toBeCloseTo(1, 2);
-    expect(open.push, "the portrait opens pushed in").toBeGreaterThan(1.5);
-    expect(open.line, "the headline opens below its mask").toBeGreaterThan(1);
-    expect(open.lede).toBeLessThan(0.01);
+    /* The plate belongs to the CSS intro, not the timeline: seeking never
+       touches it, and once the intro has run it rests hidden. */
+    expect(open.plate, "the plate is the CSS intro's, not the timeline's").toBe("hidden");
     expect(again, "seeking back gives the identical frame").toEqual(open);
 
-    expect(mid.plateScale, "the plate is opening at 1.75s").toBeGreaterThan(1.5);
-    expect(mid.push, "the portrait is pulling back at 1.75s").toBeLessThan(open.push);
-
-    expect(settled.plate, "the plate is gone at rest").toBe("hidden");
-    expect(settled.push).toBeCloseTo(1, 2);
-    expect(settled.dive).toBeCloseTo(1, 2);
+    expect(settled.dive, "the camera rests at 1").toBeCloseTo(1, 2);
+    expect(settled.figure).toBe("visible");
     expect(Math.abs(settled.line)).toBeLessThan(0.01);
     expect(settled.lede).toBeGreaterThan(0.99);
-    expect(settled.figure).toBe("visible");
+
+    expect(mid.dive, "the dive is under way a little into the exit").toBeGreaterThan(1.2);
 
     expect(end.dive, "the exit ends through the notch").toBeGreaterThan(10);
     expect(end.figure).toBe("hidden");
