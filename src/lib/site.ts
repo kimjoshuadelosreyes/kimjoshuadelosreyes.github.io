@@ -1,4 +1,4 @@
-import { EMAIL, FAQS, STACK, WORK_SEQUENCE } from "./content";
+import { EMAIL, LINKEDIN, FAQS, STACK, WORK_SEQUENCE } from "./content";
 import { AUTOMATION_PAGES } from "./automations";
 
 /**
@@ -21,7 +21,7 @@ export const SITE = {
     "Kim Joshua hand-codes fast websites, then builds the AI agents and automations behind them. Open to consultancy, full-time roles, freelance projects and gigs.",
   role: "Web developer and AI automation consultant",
   locale: "en_US",
-  linkedin: "https://www.linkedin.com/in/kimjoshuadev/",
+  linkedin: LINKEDIN,
   ogAlt: "Kim Joshua in front of the orange KIM wordmark, with the line: Websites that work. Systems that run.",
 } as const;
 

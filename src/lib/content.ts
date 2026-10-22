@@ -7,6 +7,9 @@
 
 export const EMAIL = "kimjoshuadr@gmail.com";
 
+/** The one place the LinkedIn address is written: the footer and the structured data both read it. */
+export const LINKEDIN = "https://www.linkedin.com/in/kimjoshua-ai/";
+
 /** An email to the owner with the subject already written. */
 export const mailTo = (subject: string) => `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}`;
 
@@ -14,6 +17,7 @@ export const NAV_LINKS = [
   { id: "work", label: "Projects" },
   { id: "about", label: "How it works" },
   { id: "automations", label: "Automations" },
+  { id: "testing", label: "How I test" },
   { id: "capabilities", label: "What you get" },
   { id: "engagement", label: "Services" },
   { id: "testimonials", label: "Proof" },
@@ -28,6 +32,27 @@ export const HERO = {
   meta: "Freelance \u00b7 working with teams worldwide",
   cta: "Start a project",
 } as const;
+
+/**
+ * The full-time line above the hero's title. The CV is sent on request rather
+ * than hosted, because it is kept current per application.
+ */
+export const HIRE = {
+  text: "Open to full-time AI / Automation Engineer roles. Remote, worldwide.",
+  cv: { label: "CV on request", subject: "Full-time role: CV request" },
+  github: { label: "GitHub", href: "https://github.com/kimjoshuadr" },
+} as const;
+
+/**
+ * Results from client work. Deliberately not credited to a client: they are
+ * totals across engagements. The library figures beside them on the page are
+ * counted from the catalogue in `Results.tsx`, not typed here.
+ */
+export const RESULTS = [
+  { value: "20,000+", label: "deals routed" },
+  { value: "30%+", label: "time saved" },
+  { value: "$200k+", label: "gross profit" },
+] as const;
 
 /** The line under the hero's buttons: four of the companies in the index. */
 export const HERO_PROOF = "Built for Passivae \u00b7 monno \u00b7 Trestle \u00b7 OWWO Chicken";
@@ -530,7 +555,7 @@ export const PROJECTS: Project[] = [
       { title: "Which challenge fits you", copy: "The AI suggests which challenge fits a trader, so the site gives a recommendation as well as a comparison." },
       { title: "Payout proofs", copy: "Proof that a firm paid is the thing traders most want to see, so the site collects and shows it." },
     ],
-    techStack: ["React", "Vite", "TypeScript", "Tailwind CSS", "Hono", "tRPC", "Drizzle", "GSAP", "Three.js"],
+    techStack: ["React", "Vite", "TypeScript", "Tailwind CSS", "Hono", "tRPC", "Drizzle", "Better Auth", "Supabase", "GSAP", "Three.js"],
     liveUrl: "https://fundedproptraders.com/",
   },
   {
@@ -918,7 +943,7 @@ export const CTA = {
 } as const;
 
 export const FOOTER = {
-  socials: [{ label: "LinkedIn", href: "https://www.linkedin.com/in/kimjoshuadev/" }],
+  socials: [{ label: "LinkedIn", href: LINKEDIN }],
   line: "Websites that work. Systems that run.",
 } as const;
 

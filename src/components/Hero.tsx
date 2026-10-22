@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, SplitText, prefersReducedMotion } from "@/lib/gsap";
-import { HERO, HERO_LANDING, HERO_PROOF, EMAIL } from "@/lib/content";
+import { HERO, HERO_LANDING, HERO_PROOF, HIRE, EMAIL, mailTo } from "@/lib/content";
 import Icon from "./Icons";
 import ClientsMarquee from "./ClientsMarquee";
 import SkipPin from "./SkipPin";
@@ -259,7 +259,7 @@ export default function Hero() {
       /* SplitText still splits the headline — not for the intro, which the CSS
          keyframes carry, but because the exit lifts it out a line at a time. */
       const split = new SplitText(title, { type: "lines", linesClass: "split-line", mask: "lines" });
-      const rest = q(".hero-lede, .hero-actions, .hero-meta, .hero-skip");
+      const rest = q(".hero-hire, .hero-lede, .hero-actions, .hero-meta, .hero-skip");
 
       /* The landing. Its cards leave from the notch the camera came through,
          so each one's start is the vector from its seat back to that point. */
@@ -532,6 +532,21 @@ export default function Hero() {
         {/* 4 — the copy. Ink on the fog, sized in `svh` below lg so it can
                never outgrow the figure behind it. */}
         <div className="shell hero-copy relative z-30 flex flex-col items-center pb-[clamp(16px,3svh,34px)] pt-[6px] text-center lg:absolute lg:inset-x-0 lg:bottom-0 lg:pt-0 lg:pb-[clamp(24px,3vw,44px)]">
+          <p className="hero-hire mb-[clamp(8px,1.4svh,14px)] inline-flex max-w-full flex-wrap items-center justify-center gap-x-[10px] gap-y-[2px] rounded-[20px] border border-brown/30 bg-canvas/70 px-[14px] py-[5px] text-[clamp(10.5px,1.45svh,13px)] leading-[1.35] text-ink lg:mb-[16px] lg:text-[13px]">
+            <span className="inline-flex items-baseline gap-[8px]">
+              <span className="hero-hire__dot" aria-hidden="true" />
+              <span>{HIRE.text}</span>
+            </span>
+            <span className="inline-flex gap-[10px]">
+              <a href={mailTo(HIRE.cv.subject)} className="underline underline-offset-2 transition-colors hover:text-electric">
+                {HIRE.cv.label}
+              </a>
+              <a href={HIRE.github.href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition-colors hover:text-electric">
+                {HIRE.github.label}
+              </a>
+            </span>
+          </p>
+
           <h1 className="hero-title font-display text-[clamp(26px,3.9svh,40px)] font-medium leading-[1.05] tracking-[-0.025em] text-ink lg:text-[clamp(34px,4.5vw,66px)] lg:leading-[1.02]">
             {HERO.titleLines.map((line) => (
               // The trailing space keeps SplitText's generated aria-label from

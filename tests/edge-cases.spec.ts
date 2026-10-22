@@ -362,7 +362,7 @@ test.describe("QAQC: Contrast, Brand Rebrand & Visual Hierarchy", () => {
 
     // LinkedIn link verification
     // In the footer; the close links to it as well.
-    const linkedinLink = page.locator("footer a[href='https://www.linkedin.com/in/kimjoshuadev/']");
+    const linkedinLink = page.locator("footer a[href='https://www.linkedin.com/in/kimjoshua-ai/']");
     await expect(linkedinLink).toBeVisible();
 
     // Verify X / Twitter link is completely removed

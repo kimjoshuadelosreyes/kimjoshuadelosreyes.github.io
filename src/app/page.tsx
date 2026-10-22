@@ -1,6 +1,9 @@
 import Nav from "@/components/Nav";
 import Density from "@/components/Density";
 import Hero from "@/components/Hero";
+import Results from "@/components/Results";
+import Testing from "@/components/Testing";
+import Security from "@/components/Security";
 import SystemFlow from "@/components/SystemFlow";
 import Automations from "@/components/Automations";
 import Work from "@/components/Work";
@@ -28,9 +31,12 @@ export default function Page() {
           simply follows it — nothing rises over anything.
         */}
         <div className="relative z-40 bg-canvas">
+          <Results />
           <Work />
           <SystemFlow />
           <Automations />
+          <Testing />
+          <Security />
           <Capabilities />
           <Engagement />
           <Testimonials />

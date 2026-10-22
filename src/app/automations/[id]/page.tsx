@@ -28,6 +28,7 @@ import {
   sourceUrl,
   workflowsOf,
 } from "@/lib/automations";
+import { caseStudyOf } from "@/lib/case-studies";
 
 /**
  * A page per flagship system, and a page per production workflow.
@@ -146,6 +147,7 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
   const ai = !!system && isAiSystem(system.id);
   const real = list.some(isProduction);
   const note = noteOf(list);
+  const study = caseStudyOf(page.id);
 
   return (
     <>
@@ -206,6 +208,30 @@ export default async function AutomationPage({ params }: { params: Promise<{ id:
                 </li>
               </ul>
             </section>
+          )}
+
+          {study && (
+            <div data-od-id="case-study">
+              {study.sections.map((sec) => (
+                <section key={sec.title} className="shell rail pb-[clamp(30px,3.6vw,54px)]">
+                  <div>
+                    <p className="eyebrow">{sec.title}</p>
+                  </div>
+                  <div>
+                    <p className="lede mb-[clamp(16px,2vw,26px)]">{sec.intro}</p>
+                    <ul className="case-parts">
+                      {sec.items.map((it) => (
+                        <li key={it.title} className="case-part">
+                          <h3>{it.title}</h3>
+                          <p>{it.copy}</p>
+                          {it.test && <p className="case-evidence">Tested: {it.test}</p>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+              ))}
+            </div>
           )}
 
           {/* The lead workflow, walked through. On a system page the scroll

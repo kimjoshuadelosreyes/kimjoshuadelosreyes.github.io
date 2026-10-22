@@ -215,7 +215,7 @@ test.describe("page boots", () => {
     const byType = (t: string) => graph.find((g) => g["@type"] === t)!;
     expect(graph.map((g) => g["@type"]).sort()).toEqual(["FAQPage", "Person", "ProfilePage", "WebSite"]);
     expect(byType("Person").name).toBe("Kim Joshua");
-    expect(byType("Person").sameAs).toContain("https://www.linkedin.com/in/kimjoshuadev/");
+    expect(byType("Person").sameAs).toContain("https://www.linkedin.com/in/kimjoshua-ai/");
     const faq = byType("FAQPage").mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;
     expect(faq.length).toBe(8);
     // The structured answers are the ones on the page, not a second copy.
@@ -1599,7 +1599,7 @@ test.describe("scroll-driven motion", () => {
           landing: getComputedStyle(g(".hero-landing")).visibility,
           stage: box(".hero-stage"),
           land: box(".hero-landing"),
-          next: box("#work"),
+          next: box("#results"),
           cards: [...document.querySelectorAll(".hero-card")].map((el) => {
             const r = el.getBoundingClientRect();
             return {
@@ -2166,6 +2166,27 @@ test.describe("responsive", () => {
       expect(r.right, `${w}px has no visible menu button`).not.toBeNull();
       expect(r.right!, `${w}px pushes the menu button ${r.right! - r.vw}px past the edge`).toBeLessThanOrEqual(r.vw);
       await context.close();
+    }
+  });
+
+  test("full-time strip, results, testing and security are on the home page", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator(".hero-hire")).toContainText("Open to full-time AI / Automation Engineer roles");
+    await expect(page.locator(".hero-hire a[href^='mailto:']")).toHaveText("CV on request");
+    await expect(page.locator(".hero-actions a").first()).toContainText("Start a project");
+    await expect(page.locator("#results .results__item")).toHaveCount(6);
+    await expect(page.locator("#results")).toContainText("20,000+");
+    await expect(page.locator("#results")).toContainText("322");
+    await expect(page.locator("#testing .test-grid > li")).toHaveCount(4);
+    await expect(page.locator("#security")).toContainText("Better Auth");
+    await expect(page.locator("#security")).toContainText("row-level security");
+  });
+
+  test("the AI support desk page carries the deep case study", async ({ page }) => {
+    await page.goto("/automations/ai-support-desk/");
+    const study = page.locator("[data-od-id='case-study']");
+    for (const title of ["Architecture", "Evaluation", "Failure handling", "Business impact"]) {
+      await expect(study.getByText(title, { exact: true })).toBeVisible();
     }
   });
 });
